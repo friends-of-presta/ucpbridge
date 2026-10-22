@@ -98,14 +98,14 @@ class UcpbridgeOauthModuleFrontController extends ModuleFrontController
         $client = UcpBridgeOAuth::client($p['client_id']);
         // Client ou redirect_uri inconnus : on n'envoie JAMAIS l'utilisateur vers l'URI fournie.
         if (!$client || !UcpBridgeOAuth::redirectAllowed($client, $p['redirect_uri'])) {
-            $this->page('Demande refusée', '<p>Application inconnue ou adresse de retour non enregistrée.</p>', 400);
+            $this->page(UcpBridgeI18n::shop('Request refused'), '<p>' . $this->esc(UcpBridgeI18n::shop('Unknown application or return address not registered.')) . '</p>', 400);
         }
         $state = '' !== $p['state'] ? ['state' => $p['state']] : [];
         if ('code' !== $p['response_type']) {
             $this->back($p['redirect_uri'], ['error' => 'unsupported_response_type'] + $state);
         }
         if (!UcpBridgePkce::isValidChallenge($p['code_challenge']) || 'S256' !== $p['code_challenge_method']) {
-            $this->back($p['redirect_uri'], ['error' => 'invalid_request', 'error_description' => 'PKCE S256 obligatoire'] + $state);
+            $this->back($p['redirect_uri'], ['error' => 'invalid_request', 'error_description' => UcpBridgeI18n::api('PKCE S256 required')] + $state);
         }
         $scope = UcpBridgeOAuth::filterScope($p['scope']);
         if ('' === $scope) {
@@ -122,7 +122,7 @@ class UcpbridgeOauthModuleFrontController extends ModuleFrontController
 
         if ('POST' === $_SERVER['REQUEST_METHOD']) {
             if (!hash_equals($this->csrf($p, (int) $customer->id), (string) Tools::getValue('csrf'))) {
-                $this->page('Demande expirée', '<p>Le formulaire a expiré, recommencez depuis l\'assistant.</p>', 400);
+                $this->page(UcpBridgeI18n::shop('Request expired'), '<p>' . $this->esc(UcpBridgeI18n::shop('The form has expired, start again from the assistant.')) . '</p>', 400);
             }
             if ('allow' !== Tools::getValue('decision')) {
                 $this->back($p['redirect_uri'], ['error' => 'access_denied'] + $state);
@@ -148,15 +148,17 @@ class UcpbridgeOauthModuleFrontController extends ModuleFrontController
         $shop = $this->esc(Configuration::get('PS_SHOP_NAME'));
         $app = $this->esc($client['name'] ?? $client['client_id']);
         $action = $this->esc(rtrim($this->context->link->getBaseLink(), '/') . '/ucp/oauth/authorize');
-        $body = '<p class="who">Connecté en tant que <strong>' . $this->esc($customer->firstname . ' ' . $customer->lastname)
-            . '</strong> (' . $this->esc($customer->email) . ')</p>'
-            . '<p><strong>' . $app . '</strong> souhaite relier votre compte ' . $shop . ' pour :</p>'
+        // Textes traduits échappés, puis mise en gras des noms (déjà échappés) par remplacement.
+        $body = '<p class="who">' . strtr($this->esc(UcpBridgeI18n::shop('Logged in as %name% (%email%)')),
+                ['%name%' => '<strong>' . $this->esc($customer->firstname . ' ' . $customer->lastname) . '</strong>', '%email%' => $this->esc($customer->email)]) . '</p>'
+            . '<p>' . strtr($this->esc(UcpBridgeI18n::shop('%app% wants to link your %shop% account to:')),
+                ['%app%' => '<strong>' . $app . '</strong>', '%shop%' => $shop]) . '</p>'
             . '<ul>' . $items . '</ul>'
-            . '<p class="note">Vous pourrez retirer cet accès à tout moment depuis votre compte, rubrique « Mes accès agents ». L\'assistant ne voit jamais votre mot de passe.</p>'
+            . '<p class="note">' . $this->esc(UcpBridgeI18n::shop('You can withdraw this access at any time from your account, section "My agent access". The assistant never sees your password.')) . '</p>'
             . '<form method="post" action="' . $action . '">' . $hidden
-            . '<div class="actions"><button name="decision" value="deny" class="deny">Refuser</button>'
-            . '<button name="decision" value="allow" class="allow">Autoriser</button></div></form>';
-        $this->page('Autoriser ' . $app . "\u{00A0}?", $body, 200);
+            . '<div class="actions"><button name="decision" value="deny" class="deny">' . $this->esc(UcpBridgeI18n::shop('Refuse')) . '</button>'
+            . '<button name="decision" value="allow" class="allow">' . $this->esc(UcpBridgeI18n::shop('Allow')) . '</button></div></form>';
+        $this->page(UcpBridgeI18n::shop('Allow %app%?', ['%app%' => $client['name'] ?? $client['client_id']]), $body, 200);
     }
 
     private function page($title, $body, $code)
@@ -170,7 +172,8 @@ class UcpbridgeOauthModuleFrontController extends ModuleFrontController
         header('X-Frame-Options: DENY');
         header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'");
         $shop = $this->esc(Configuration::get('PS_SHOP_NAME'));
-        echo '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        $lang = $this->context->language;
+        echo '<!doctype html><html lang="' . $this->esc($lang && $lang->iso_code ? $lang->iso_code : 'en') . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<title>' . $this->esc($title) . '</title><style>'
             . 'body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f4f7;color:#1d1d24}'
             . '.card{max-width:440px;margin:48px auto;background:#fff;border-radius:14px;padding:28px 28px 24px;box-shadow:0 4px 24px rgba(0,0,0,.08)}'
@@ -211,7 +214,7 @@ class UcpbridgeOauthModuleFrontController extends ModuleFrontController
     private function token()
     {
         if ('POST' !== $_SERVER['REQUEST_METHOD']) {
-            $this->json(405, ['error' => 'invalid_request', 'error_description' => 'POST uniquement']);
+            $this->json(405, ['error' => 'invalid_request', 'error_description' => UcpBridgeI18n::api('POST only')]);
         }
         $client = $this->clientFromRequest();
         $grant = (string) Tools::getValue('grant_type');

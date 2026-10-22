@@ -30,7 +30,7 @@ require $root . '/config/config.inc.php';
 
 $module = Module::getInstanceByName('ucpbridge');
 if (!$module || !Module::isInstalled('ucpbridge')) {
-    fwrite(STDERR, "module ucpbridge non installé\n");
+    fwrite(STDERR, "ucpbridge module not installed\n");
     exit(1);
 }
 $ctx = Context::getContext();
@@ -42,7 +42,8 @@ $ctx->country = new Country((int) Configuration::get('PS_COUNTRY_DEFAULT'));
 
 $done = (new UcpBridgeCart($ctx, $module))->reconcile($minutes);
 foreach ($done as $d) {
-    echo $d[0], ' : ', $d[1], "\n";
+    // Code stable entre crochets : à lire par les scripts, le libellé suit la langue de la boutique.
+    echo $d[0], ' : ', $d[1], ' [', $d[2], "]\n";
 }
-echo count($done), " session(s) traitée(s), seuil ", $minutes, " minute(s)\n";
+echo UcpBridgeI18n::admin('%count% session(s) processed, threshold %minutes% minute(s)', ['%count%' => count($done), '%minutes%' => $minutes]), "\n";
 exit(0);

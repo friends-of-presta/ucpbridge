@@ -4,6 +4,75 @@ Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast
 
 ## 0.1.3-beta (non publiée)
 
+Nouveautés
+
+- Mise à jour sans désinstallation (#11) : scripts `upgrade/upgrade-X.Y.Z.php` lancés par PrestaShop (gestionnaire
+  de modules ou `prestashop:module upgrade ucpbridge`), à partir de la 0.1.2. `upgrade-0.1.3.php` appelle
+  `Ucpbridge::upgradeInPlace()` : tables, colonnes (`Ucpbridge::ADDED_COLUMNS`), hooks et clés de configuration
+  manquants créés, lignes et valeurs existantes intactes (clé API, secret des liens signés, clients OAuth), règles
+  `.htaccess` réinsérées ; rejouable. Nouvelle classe `UcpBridgeSchema`. La configuration d'installation est décrite
+  une seule fois (`configDefaults()`), pour l'installation comme pour la mise à jour. Les corrections #1 à #4 ne
+  changent aucune table : elles n'ajoutent que des clés au JSON `payload` des sessions
+  (`charge_attempt`, `charge_unknown`), lues avec une valeur par défaut. Configuration : la clé unique
+  `UCPBRIDGE_API_KEY` (#5) est migrée vers la plateforme `default` de `UCPBRIDGE_API_KEYS` en tête de la mise à jour,
+  avant la création des clés manquantes (sinon une clé neuve aurait pris sa place). L'ancienne clé n'est supprimée
+  qu'après l'enregistrement réussi de la nouvelle liste (`UcpBridgeApiKeys::migrateLegacy()`) : si l'écriture échoue,
+  elle reste acceptée et la mise à jour échoue au lieu de couper la plateforme en place. Version du module : 0.1.3.
+- Désinstallation (#12) : le journal de preuve (`ps_ucpbridge_proof`), les demandes de rétractation
+  (`ps_ucpbridge_withdrawal`) et le journal des paiements (`ps_ucpbridge_payment`) sont conservés par défaut et
+  retrouvés à la réinstallation (colonnes complétées si les tables datent d'une version plus ancienne). Suppression
+  seulement sur choix explicite : case « Supprimer aussi... à la prochaine désinstallation » de la configuration
+  (`UCPBRIDGE_UNINSTALL_PURGE`, 0 par défaut, effacée avec la configuration). Export CSV des preuves et rétractations
+  depuis la configuration (`UcpBridgeExport`, jeton anti-CSRF du module) : UTF-8 avec BOM, séparateur `;`, une ligne
+  par commande, champs JSON tels qu'enregistrés, valeurs commençant par `=`, `+`, `-` ou `@` neutralisées.
+- RGPD (#13) : durées de conservation configurables par catégorie (`UCPBRIDGE_RETENTION_SESSIONS` 30 j,
+  `_GUESTS` 30 j, `_OAUTH` 30 j, `_PAYMENTS` 3650 j, `_PROOFS` 3650 j ; 0 = jamais) et purge (`UcpBridgePurge`) en
+  ligne de commande (`bin/purge.php`, `--dry-run`) et depuis la configuration (« Simuler la purge », « Purger
+  maintenant »), avec compte rendu par catégorie, aussi consigné au journal PrestaShop. Sessions et paniers terminés ou
+  expirés supprimés avec leur panier PrestaShop sans commande et leur adresse sans client ; sessions terminées par une
+  commande gardées sans les données personnelles de l'acheteur ; clients invités créés par le module et sans aucune
+  commande supprimés, ceux qui ont commandé jamais ; codes et jetons OAuth expirés ou révoqués ; journal des paiements,
+  preuves et rétractations après 10 ans ; clés d'idempotence de plus de 24 h. Aucune commande touchée. Une session en
+  échec (débit non remboursé ou incertain) et son acheteur invité suivent la durée du journal des paiements : jamais
+  supprimés avant. Durées du journal des paiements et des preuves jamais sous 3650 jours (0 = jamais reste permis) :
+  refus à l'enregistrement, et purge refusée sans rien supprimer si la configuration est en dessous. Compte rendu
+  exact (paniers et adresses supprimés avec un invité comptés, simulation identique à la purge) ; sessions lues par
+  lots, celles déjà minimisées écartées en SQL ; aucune commande vérifiée avant toute suppression. Nouvelle table
+  `ps_ucpbridge_customer` (invités créés par le module, renseignée à la création de l'invité, reprise depuis les
+  sessions à la mise à jour depuis la 0.1.2, conservée à la désinstallation avec les preuves).
+- Back-office aux standards PrestaShop (#17) : la page de configuration (`UcpBridgeConfigPage`) est faite de
+  formulaires `HelperForm` (réglages, ajout d'une plateforme, durées de conservation, purge, rapprochement) et de
+  gabarits Smarty pour les listes (`views/templates/admin/` : plateformes et clés, accès agents, preuves et export) ;
+  le bloc de preuve de la fiche commande et le lien « Mes accès agents » du compte client passent aussi par des
+  gabarits (`views/templates/hook/`). Fonctions, noms de champs, boutons et jeton anti-CSRF du module (`ucp_csrf`)
+  inchangés ; chaque formulaire est un formulaire HTML distinct. Les cases à cocher deviennent des interrupteurs
+  oui/non (mêmes valeurs envoyées). L'identifiant de plateforme reçu en POST est échappé dans les messages de
+  confirmation (il ne l'était pas depuis la 0.1.2).
+- Découpage de `UcpBridgeCart` (#17), sans changement de comportement ni de l'API UCP : `UcpBridgeCart` devient la
+  façade qui assemble les classes de `classes/cart/` et garde son API publique et ses constantes.
+  `UcpBridgeCaller` (appelant), `UcpBridgeSessionStore` (sessions, statuts, réservation atomique),
+  `UcpBridgeMessage` (messages et enveloppes UCP, logique pure), `UcpBridgeCartLines` (lignes et panier PrestaShop),
+  `UcpBridgeBuyer` (acheteur, invité, consentements), `UcpBridgeFulfillment` (adresse, transporteurs),
+  `UcpBridgeCartSession` (panier transférable), `UcpBridgeCheckoutSession` (création et mise à jour de la caisse,
+  CGV, annulation), `UcpBridgeCheckoutStatus` (manques, statut), `UcpBridgeCheckoutView` (document checkout),
+  `UcpBridgeCheckoutCompletion` (finalisation, débit, commande, journaux), `UcpBridgeReconciler` (rapprochement),
+  `UcpBridgeOrderView` (document de commande). Tests : `MessageTest` (unitaire), `tests/test_14_back_office.py`
+  (chaque fonction de la configuration depuis le navigateur).
+- Traductions (#15) : toutes les chaînes destinées à un humain passent par le traducteur de PrestaShop (nouveau
+  système, `isUsingNewTranslationSystem()`), textes sources en anglais, français et anglais fournis
+  (`translations/fr-FR/`, `translations/en-US/`, 341 chaînes : 155 `Modules.Ucpbridge.Admin`, 57
+  `Modules.Ucpbridge.Shop`, 129 `Modules.Ucpbridge.Api`). Nouvelle classe `UcpBridgeI18n` (texte source rendu tel quel
+  hors PrestaShop, pour les tests unitaires). Back-office dans la langue de l'employé ; pages du module (`html lang`),
+  API et MCP (descriptions des outils, instructions, messages) dans celle de la boutique ou du visiteur ; e-mail de
+  confirmation (bloc légal) et accusé de rétractation (objet et modèle) dans celle de la commande. Modèle
+  `mails/en/ucp_withdrawal` en anglais. Codes UCP inchangés. Codes stables ajoutés pour les scripts et les tests :
+  `data-ucp-page` sur les pages du module, `data-ucp-row` et `data-ucp-withdrawal` sur le bloc de preuve,
+  `data-ucp-code` et `data-ucp-mode` sur les comptes rendus du back-office, code entre crochets en fin de ligne de
+  `bin/purge.php` et `bin/reconcile.php` ; `UcpBridgeCart::reconcile()` renvoie aussi le code de l'action et
+  `UcpBridgeRetention::summary()` des lignes indexées par code. Les tests vérifient ces codes, plus les libellés ;
+  seul `tests/test_15_traductions.py` lit des libellés, pour vérifier la langue (boutique en anglais puis en
+  français). `TranslationsTest` (unitaire) : chaque chaîne a sa traduction, sans orpheline ni paramètre perdu.
+
 Corrections
 
 - API (#5) : une clé API par plateforme en mode invité (`UcpBridgeApiKeys`, configuration `UCPBRIDGE_API_KEYS`).

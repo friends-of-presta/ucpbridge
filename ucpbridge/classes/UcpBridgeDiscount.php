@@ -113,24 +113,24 @@ class UcpBridgeDiscount
     {
         $now = date('Y-m-d H:i:s');
         if (!$rule->active) {
-            return ['discount_code_invalid', 'code désactivé'];
+            return ['discount_code_invalid', UcpBridgeI18n::api('code disabled')];
         }
         if ($rule->date_to && '0000-00-00 00:00:00' !== $rule->date_to && $rule->date_to < $now) {
-            return ['discount_code_expired', 'code expiré depuis le ' . date('d/m/Y', strtotime($rule->date_to))];
+            return ['discount_code_expired', UcpBridgeI18n::api('code expired since %date%', ['%date%' => date('d/m/Y', strtotime($rule->date_to))])];
         }
         if ($rule->date_from && $rule->date_from > $now) {
-            return ['discount_code_invalid', 'code valable à partir du ' . date('d/m/Y', strtotime($rule->date_from))];
+            return ['discount_code_invalid', UcpBridgeI18n::api('code valid from %date%', ['%date%' => date('d/m/Y', strtotime($rule->date_from))])];
         }
         if ($rule->quantity <= 0) {
-            return ['discount_code_invalid', 'code épuisé'];
+            return ['discount_code_invalid', UcpBridgeI18n::api('code used up')];
         }
         if ($rule->id_customer) {
             $c = $this->context->customer;
             if (!$c || !$c->id || $c->is_guest) {
-                return ['discount_code_user_not_logged_in', 'code réservé à un client identifié (identity linking requis)'];
+                return ['discount_code_user_not_logged_in', UcpBridgeI18n::api('code reserved for an identified customer (identity linking required)')];
             }
             if ((int) $c->id !== (int) $rule->id_customer) {
-                return ['discount_code_user_ineligible', 'code réservé à un autre client'];
+                return ['discount_code_user_ineligible', UcpBridgeI18n::api('code reserved for another customer')];
             }
         }
 

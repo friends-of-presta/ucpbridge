@@ -42,15 +42,15 @@ class UcpBridgeMockProvider implements UcpBridgePaymentProvider
     {
         $secret = (string) Configuration::get('UCPBRIDGE_MOCK_SECRET');
         if ('' === $secret || !hash_equals($secret, (string) ($credential['token'] ?? ''))) {
-            return UcpBridgePaymentResult::fail('Paiement de test refusé (jeton de simulation incorrect)');
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Test payment refused (incorrect simulation token)'));
         }
 
         // Référence propre à chaque débit : le journal des paiements compte les débits réels.
-        return UcpBridgePaymentResult::ok('mock_' . bin2hex(random_bytes(8)), 'UCP paiement de test');
+        return UcpBridgePaymentResult::ok('mock_' . bin2hex(random_bytes(8)), UcpBridgeI18n::api('UCP test payment'));
     }
 
     public function refund($transactionId, $amount, $currency, array $context)
     {
-        return UcpBridgePaymentResult::ok('mockre_' . bin2hex(random_bytes(8)), 'Remboursement de test');
+        return UcpBridgePaymentResult::ok('mockre_' . bin2hex(random_bytes(8)), UcpBridgeI18n::api('Test refund'));
     }
 }

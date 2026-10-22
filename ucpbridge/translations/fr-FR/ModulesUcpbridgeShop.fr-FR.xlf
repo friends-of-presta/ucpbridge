@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE. -->
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="ucpbridge" source-language="en-US" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="393c8cb75589fd90b9fef3ce4ecbca35">
+        <source>%amount% incl. tax</source>
+        <target>%amount% TTC</target>
+      </trans-unit>
+      <trans-unit id="66dd06d78e7827bdb080d89a790cb15f">
+        <source>%app% wants to link your %shop% account to:</source>
+        <target>%app% souhaite relier votre compte %shop% pour :</target>
+      </trans-unit>
+      <trans-unit id="b5bbc647b031c21cdaedc2b0656d9c95">
+        <source>Access revoked: %client% can no longer act on your behalf.</source>
+        <target>Accès révoqué : %client% ne peut plus agir en votre nom.</target>
+      </trans-unit>
+      <trans-unit id="4e0d6af08a8482d12a1c3dd2f36f5fee">
+        <source>Acknowledgement of your withdrawal request</source>
+        <target>Accusé de réception de votre demande de rétractation</target>
+      </trans-unit>
+      <trans-unit id="45f0fb72a0defdfdb01de4b5a5a6876b">
+        <source>Allow</source>
+        <target>Autoriser</target>
+      </trans-unit>
+      <trans-unit id="aae15e50ba48adac8b52e763fa348fc5">
+        <source>Allow %app%?</source>
+        <target>Autoriser %app% ?</target>
+      </trans-unit>
+      <trans-unit id="f2aeca1f7d091fb726788a23fe7fa2e8">
+        <source>Already accepted</source>
+        <target>Déjà acceptées</target>
+      </trans-unit>
+      <trans-unit id="6429924c818fe1194af5b73d2a35c585">
+        <source>An acknowledgement has been sent to you by e-mail at %email%. The shop will tell you how to return the items and will refund you at the latest 14 days after receiving your request.</source>
+        <target>Un accusé de réception vous a été envoyé par e-mail à %email%. La boutique vous indiquera les modalités de retour des articles et vous remboursera au plus tard 14 jours après réception de votre demande.</target>
+      </trans-unit>
+      <trans-unit id="8c287689fdd0d3162afea337214d937a">
+        <source>Assistants allowed to create orders or to view your orders on your behalf.</source>
+        <target>Assistants autorisés à créer des commandes ou à consulter vos commandes en votre nom.</target>
+      </trans-unit>
+      <trans-unit id="122e15ccab4135a2786937a24b11e5e9">
+        <source>Back to my account</source>
+        <target>Retour à mon compte</target>
+      </trans-unit>
+      <trans-unit id="f574b04c7ac80a75d114345a63ae4d1d">
+        <source>Confirm the withdrawal</source>
+        <target>Confirmer la rétractation</target>
+      </trans-unit>
+      <trans-unit id="8c2804d9e45cce93bc4cc86be9ddd420">
+        <source>Create and complete orders on your behalf, with your saved address</source>
+        <target>Créer et finaliser des commandes en votre nom, avec votre adresse enregistrée</target>
+      </trans-unit>
+      <trans-unit id="f9998e1c156637149c20d9b7e6371cbf">
+        <source>I have read and accept the terms of sale</source>
+        <target>J'ai lu et j'accepte les CGV</target>
+      </trans-unit>
+      <trans-unit id="102803f010d8fd0b6c15d54fd0483f34">
+        <source>Invalid link</source>
+        <target>Lien invalide</target>
+      </trans-unit>
+      <trans-unit id="a8a789ea01dc4945ee4c1daf69fb5dd3">
+        <source>Invalid or expired cart link.</source>
+        <target>Lien de panier invalide ou expiré.</target>
+      </trans-unit>
+      <trans-unit id="0a012da17739214154ac09c370cc4dac">
+        <source>Invalid or expired link: go back to the assistant to get a new link.</source>
+        <target>Lien invalide ou expiré : revenez à l'assistant pour obtenir un nouveau lien.</target>
+      </trans-unit>
+      <trans-unit id="8b5497d44e08b0c4caaa37ac58c12604">
+        <source>Invalid or expired withdrawal link. Contact the shop.</source>
+        <target>Lien de rétractation invalide ou expiré. Contactez la boutique.</target>
+      </trans-unit>
+      <trans-unit id="b86035b7392c3148f643faee13caa61b">
+        <source>Legal information</source>
+        <target>Informations légales</target>
+      </trans-unit>
+      <trans-unit id="fa350c08b5df14449cc1f6892d9d5acc">
+        <source>Linked on %date%, access valid until %expiry%</source>
+        <target>Relié le %date%, accès valable jusqu'au %expiry%</target>
+      </trans-unit>
+      <trans-unit id="f3a12fdd88a37ed0c066429de6deed17">
+        <source>Log in to find this cart again.</source>
+        <target>Connectez-vous pour retrouver ce panier.</target>
+      </trans-unit>
+      <trans-unit id="b002e43e2249b9d5b18db3a30bca855f">
+        <source>Logged in as %name% (%email%)</source>
+        <target>Connecté en tant que %name% (%email%)</target>
+      </trans-unit>
+      <trans-unit id="4e8114d5930c8024b738c431e7863a6e">
+        <source>My agent access</source>
+        <target>Mes accès agents</target>
+      </trans-unit>
+      <trans-unit id="39d70cdaff22dc5f34b96acc4320a6ec">
+        <source>No assistant is linked to your account.</source>
+        <target>Aucun assistant n'est relié à votre compte.</target>
+      </trans-unit>
+      <trans-unit id="ea1275a590a3f71084b5f53cfc05ab08">
+        <source>Order %reference% of %date%, in the name of %name%.</source>
+        <target>Commande %reference% du %date%, au nom de %name%.</target>
+      </trans-unit>
+      <trans-unit id="57f6f932e1271f12bf7fe06ea7841666">
+        <source>Please tick the box to accept the terms of sale.</source>
+        <target>Veuillez cocher la case pour accepter les conditions générales de vente.</target>
+      </trans-unit>
+      <trans-unit id="b0231aae7363a83b07d74d2c53c41057">
+        <source>Record my acceptance</source>
+        <target>Enregistrer mon acceptation</target>
+      </trans-unit>
+      <trans-unit id="dc7176d0b9ec5492c6a8f43f8a4b6d92">
+        <source>Refuse</source>
+        <target>Refuser</target>
+      </trans-unit>
+      <trans-unit id="99e8432e5cb8e7a42fa401b32c5d2e48">
+        <source>Request expired</source>
+        <target>Demande expirée</target>
+      </trans-unit>
+      <trans-unit id="632590f49c99195248995729034031fc">
+        <source>Request refused</source>
+        <target>Demande refusée</target>
+      </trans-unit>
+      <trans-unit id="41bb42bd60707a6e924ff75d01112dd2">
+        <source>Revoke this access</source>
+        <target>Révoquer cet accès</target>
+      </trans-unit>
+      <trans-unit id="f0f6bc5d6471f04fe37f71b6f6f0a528">
+        <source>Right of withdrawal: 14 days from receipt of your order.</source>
+        <target>Droit de rétractation : 14 jours à compter de la réception de votre commande.</target>
+      </trans-unit>
+      <trans-unit id="498d9c2fe53442dd9d4181b63d9be598">
+        <source>Right of withdrawal: you have 14 days from receipt of your order to withdraw, without having to give any reason.</source>
+        <target>Droit de rétractation : vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à vous justifier.</target>
+      </trans-unit>
+      <trans-unit id="1158a18c2aaf68da6e43b702a520b760">
+        <source>Session ended</source>
+        <target>Session terminée</target>
+      </trans-unit>
+      <trans-unit id="d678595bc849d3f16f4b20ab22b7a2be">
+        <source>Summary of your order</source>
+        <target>Récapitulatif de votre commande</target>
+      </trans-unit>
+      <trans-unit id="18b1c8b7062bd277e6030da629c83b63">
+        <source>Terms of sale</source>
+        <target>Conditions générales de vente</target>
+      </trans-unit>
+      <trans-unit id="7a7c46aab7e07559c6f7a8b25f2b9ef4">
+        <source>Thank you</source>
+        <target>Merci</target>
+      </trans-unit>
+      <trans-unit id="9912eae3aa7b1ab0d0228b4d30fc3d0f">
+        <source>The form has expired, start again from the assistant.</source>
+        <target>Le formulaire a expiré, recommencez depuis l'assistant.</target>
+      </trans-unit>
+      <trans-unit id="bb9a4d75bce7573554ef2d3dbcc14a67">
+        <source>The form has expired: reload the page.</source>
+        <target>Le formulaire a expiré : rechargez la page.</target>
+      </trans-unit>
+      <trans-unit id="283c5cffe0e69b54591d32032cf077d8">
+        <source>This cart is no longer available.</source>
+        <target>Ce panier n'est plus disponible.</target>
+      </trans-unit>
+      <trans-unit id="54a53c21465ba406ed1c2c943e1b0537">
+        <source>This order has already been placed or canceled.</source>
+        <target>Cette commande est déjà passée ou annulée.</target>
+      </trans-unit>
+      <trans-unit id="d3497278f39846f3441f4aebb828c9f2">
+        <source>This order is being completed by your assistant.</source>
+        <target>Cette commande est en cours de finalisation par votre assistant.</target>
+      </trans-unit>
+      <trans-unit id="ea067eb37801c5aab1a1c685eb97d601">
+        <source>Total paid</source>
+        <target>Total payé</target>
+      </trans-unit>
+      <trans-unit id="f35f2bfe4a8aebaf2609203c3fc96ba8">
+        <source>Unknown application or return address not registered.</source>
+        <target>Application inconnue ou adresse de retour non enregistrée.</target>
+      </trans-unit>
+      <trans-unit id="33b8f7bd2ec4d2a919a14f7274230214">
+        <source>Version %version%. Applicable documents:</source>
+        <target>Version %version%. Documents applicables :</target>
+      </trans-unit>
+      <trans-unit id="05e6dc2e5f693215681b82af3fd4f526">
+        <source>View the orders placed by this assistant</source>
+        <target>Consulter les commandes passées par cet assistant</target>
+      </trans-unit>
+      <trans-unit id="42bc9015f1bbedf1e957034e91526893">
+        <source>Withdraw from this order</source>
+        <target>Se rétracter de cette commande</target>
+      </trans-unit>
+      <trans-unit id="9cd94145c3076663789095c4db090e27">
+        <source>Withdraw from this order: %url%</source>
+        <target>Se rétracter de cette commande : %url%</target>
+      </trans-unit>
+      <trans-unit id="ab85d9edc966536822a98a25f7d8640a">
+        <source>Withdrawal</source>
+        <target>Rétractation</target>
+      </trans-unit>
+      <trans-unit id="3989ce142ed7f01fdbe34c2e64739dd2">
+        <source>Withdrawal recorded</source>
+        <target>Rétractation enregistrée</target>
+      </trans-unit>
+      <trans-unit id="27ccb0b1ae8f7646f8e10f081770e9dc">
+        <source>You can go back to your assistant to complete the order.</source>
+        <target>Vous pouvez revenir à votre assistant pour finaliser la commande.</target>
+      </trans-unit>
+      <trans-unit id="99f24092c1181cacdb939ded5fd0372c">
+        <source>You can withdraw this access at any time from your account, section "My agent access". The assistant never sees your password.</source>
+        <target>Vous pourrez retirer cet accès à tout moment depuis votre compte, rubrique « Mes accès agents ». L'assistant ne voit jamais votre mot de passe.</target>
+      </trans-unit>
+      <trans-unit id="2993fc5afafebb1c8e0432c137001b52">
+        <source>You have 14 days from receipt of your order to withdraw, without having to give any reason. By confirming, you notify the shop of your decision to withdraw from this contract.</source>
+        <target>Vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à vous justifier. En confirmant, vous notifiez à la boutique votre décision de vous rétracter de ce contrat.</target>
+      </trans-unit>
+      <trans-unit id="e9e6d4e89b225f0c51a190b5998c7a4d">
+        <source>Your acceptance of the terms of sale is already recorded. Go back to your assistant to complete the order.</source>
+        <target>Votre acceptation des CGV est déjà enregistrée. Revenez à votre assistant pour finaliser la commande.</target>
+      </trans-unit>
+      <trans-unit id="0281254e773245faf214864d8cc06a77">
+        <source>Your acceptance of the terms of sale is recorded.</source>
+        <target>Votre acceptation des conditions générales de vente est enregistrée.</target>
+      </trans-unit>
+      <trans-unit id="107edaaa4ab9c9e5574da097ec8107d4">
+        <source>Your assistant is modifying this cart: try again in a few seconds.</source>
+        <target>Votre assistant modifie ce panier : réessayez dans quelques secondes.</target>
+      </trans-unit>
+      <trans-unit id="099e366f0564fba3d3e6aa5e78d0c3f6">
+        <source>Your withdrawal request for order %reference% is recorded.</source>
+        <target>Votre demande de rétractation pour la commande %reference% est enregistrée.</target>
+      </trans-unit>
+      <trans-unit id="4b175860219672bcd313d012bfdb5a46">
+        <source>Your withdrawal request for order %reference% was already recorded on %date%.</source>
+        <target>Votre demande de rétractation pour la commande %reference% a déjà été enregistrée le %date%.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -28,19 +28,18 @@ class UcpbridgeWithdrawModuleFrontController extends ModuleFrontController
         $e = ['UcpBridgePage', 'e'];
         $order = new Order((int) Tools::getValue('order'));
         if (!$this->module->checkSigned('withdraw', ['order']) || !Validate::isLoadedObject($order) || $order->module !== $this->module->name) {
-            UcpBridgePage::render('Lien invalide', '<p class="err">Lien de rétractation invalide ou expiré. Contactez la boutique.</p>', 403);
+            UcpBridgePage::render(UcpBridgeI18n::shop('Invalid link'), '<p class="err">' . $e(UcpBridgeI18n::shop('Invalid or expired withdrawal link. Contact the shop.')) . '</p>', 403, 'invalid-link');
         }
         $customer = new Customer((int) $order->id_customer);
-        $ref = $e($order->reference);
         $done = UcpBridgeProof::withdrawal((int) $order->id);
         if ($done) {
-            UcpBridgePage::render('Rétractation', '<p class="ok">Votre demande de rétractation pour la commande ' . $ref
-                . ' a déjà été enregistrée le ' . $e($done['date_add']) . '.</p>');
+            UcpBridgePage::render(UcpBridgeI18n::shop('Withdrawal'), '<p class="ok">' . $e(UcpBridgeI18n::shop('Your withdrawal request for order %reference% was already recorded on %date%.', ['%reference%' => $order->reference, '%date%' => $done['date_add']])) . '</p>', 200,
+                'withdrawal-already-recorded');
         }
         $error = '';
         if ('POST' === $_SERVER['REQUEST_METHOD']) {
             if (!$this->module->checkFormToken($this->context->cookie, 'withdraw|' . (int) $order->id, Tools::getValue('csrf'))) {
-                $error = 'Le formulaire a expiré : rechargez la page.';
+                $error = UcpBridgeI18n::shop('The form has expired: reload the page.');
             } else {
                 if (UcpBridgeProof::recordWithdrawal((int) $order->id, $customer->email, Tools::getRemoteAddr())) {
                     $sent = $this->sendAcknowledgement($order, $customer);
@@ -48,33 +47,35 @@ class UcpbridgeWithdrawModuleFrontController extends ModuleFrontController
                         UcpBridgeProof::markWithdrawalMailed((int) $order->id);
                     }
                 }
-                UcpBridgePage::render('Rétractation enregistrée', '<p class="ok">Votre demande de rétractation pour la commande ' . $ref . ' est enregistrée.</p>'
-                    . '<p>Un accusé de réception vous a été envoyé par e-mail à ' . $e($customer->email) . '. La boutique vous indiquera les modalités '
-                    . 'de retour des articles et vous remboursera au plus tard 14 jours après réception de votre demande.</p>');
+                UcpBridgePage::render(UcpBridgeI18n::shop('Withdrawal recorded'), '<p class="ok">' . $e(UcpBridgeI18n::shop('Your withdrawal request for order %reference% is recorded.', ['%reference%' => $order->reference])) . '</p>'
+                    . '<p>' . $e(UcpBridgeI18n::shop('An acknowledgement has been sent to you by e-mail at %email%. The shop will tell you how to return the items and will refund you at the latest 14 days after receiving your request.', ['%email%' => $customer->email])) . '</p>', 200,
+                    'withdrawal-recorded');
             }
         }
         $rows = '';
         foreach ($order->getProducts() as $p) {
             $rows .= '<tr><td>' . (int) $p['product_quantity'] . ' × ' . $e($p['product_name']) . '</td><td class="r">'
-                . $e(UcpBridgePage::euros((int) round($p['total_price_tax_incl'] * 100))) . ' TTC</td></tr>';
+                . $e(UcpBridgeI18n::shop('%amount% incl. tax', ['%amount%' => UcpBridgePage::euros((int) round($p['total_price_tax_incl'] * 100))])) . '</td></tr>';
         }
-        $rows .= '<tr class="total"><td>Total payé</td><td class="r">' . $e(UcpBridgePage::euros((int) round($order->total_paid_tax_incl * 100))) . '</td></tr>';
+        $rows .= '<tr class="total"><td>' . $e(UcpBridgeI18n::shop('Total paid')) . '</td><td class="r">' . $e(UcpBridgePage::euros((int) round($order->total_paid_tax_incl * 100))) . '</td></tr>';
         $body = ($error ? '<p class="err">' . $e($error) . '</p>' : '')
-            . '<p>Commande ' . $ref . ' du ' . $e(Tools::displayDate($order->date_add)) . ', au nom de ' . $e($customer->firstname . ' ' . $customer->lastname) . '.</p>'
+            . '<p>' . $e(UcpBridgeI18n::shop('Order %reference% of %date%, in the name of %name%.', ['%reference%' => $order->reference, '%date%' => Tools::displayDate($order->date_add), '%name%' => $customer->firstname . ' ' . $customer->lastname])) . '</p>'
             . '<table>' . $rows . '</table>'
-            . '<p>Vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à vous justifier. '
-            . 'En confirmant, vous notifiez à la boutique votre décision de vous rétracter de ce contrat.</p>'
+            . '<p>' . $e(UcpBridgeI18n::shop('You have 14 days from receipt of your order to withdraw, without having to give any reason. By confirming, you notify the shop of your decision to withdraw from this contract.')) . '</p>'
             . '<form method="post" action="' . $e($_SERVER['REQUEST_URI'] ?? '') . '">'
             . '<input type="hidden" name="csrf" value="' . $e($this->module->formToken($this->context->cookie, 'withdraw|' . (int) $order->id)) . '">'
-            . '<button type="submit">Confirmer la rétractation</button></form>';
-        UcpBridgePage::render('Se rétracter de cette commande', $body);
+            . '<button type="submit">' . $e(UcpBridgeI18n::shop('Confirm the withdrawal')) . '</button></form>';
+        UcpBridgePage::render(UcpBridgeI18n::shop('Withdraw from this order'), $body, 200, 'withdrawal-form');
     }
 
     private function sendAcknowledgement(Order $order, Customer $customer)
     {
         $idLang = (int) $order->id_lang ?: (int) Configuration::get('PS_LANG_DEFAULT');
 
-        return (bool) Mail::send($idLang, 'ucp_withdrawal', 'Accusé de réception de votre demande de rétractation',
+        // Objet dans la langue de la commande, comme le modèle mails/<iso>/ucp_withdrawal.
+        $subject = UcpBridgeI18n::shop('Acknowledgement of your withdrawal request', [], UcpBridgeI18n::localeOf($idLang));
+
+        return (bool) Mail::send($idLang, 'ucp_withdrawal', $subject,
             [
                 '{firstname}' => $customer->firstname,
                 '{lastname}' => $customer->lastname,

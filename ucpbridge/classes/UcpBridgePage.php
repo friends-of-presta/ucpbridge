@@ -21,8 +21,11 @@ class UcpBridgePage
         return number_format(((int) $cents) / 100, 2, ',', "\u{202F}") . "\u{00A0}€";
     }
 
-    /** @param string $bodyHtml contenu déjà échappé par l'appelant */
-    public static function render($title, $bodyHtml, $code = 200)
+    /**
+     * @param string $bodyHtml contenu déjà échappé par l'appelant
+     * @param string $page code stable de la page (attribut data-ucp-page), lu par les tests à la place des libellés
+     */
+    public static function render($title, $bodyHtml, $code = 200, $page = '')
     {
         if (ob_get_length()) {
             ob_clean();
@@ -34,7 +37,8 @@ class UcpBridgePage
         header('Referrer-Policy: no-referrer');
         header("Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'");
         $shop = self::e(Configuration::get('PS_SHOP_NAME'));
-        echo '<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+        $lang = Context::getContext()->language;
+        echo '<!doctype html><html lang="' . self::e($lang && $lang->iso_code ? $lang->iso_code : 'en') . '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             . '<title>' . self::e($title) . ' | ' . self::e(Ucpbridge::DISPLAY_NAME) . '</title><style>'
             . 'body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f4f7;color:#1d1d24}'
             . '.card{max-width:720px;margin:32px auto;background:#fff;border-radius:14px;padding:28px;box-shadow:0 4px 24px rgba(0,0,0,.08)}'
@@ -46,7 +50,7 @@ class UcpBridgePage
             . '.err{background:#fde8e8;color:#8a1c1c;border-radius:8px;padding:10px 14px}.ok{background:#e7f6ec;color:#1c5c33;border-radius:8px;padding:10px 14px}'
             . '.note{font-size:13px;color:#6b6b78}button{font:inherit;border-radius:8px;padding:11px 20px;cursor:pointer;border:1px solid #31249F;'
             . 'background:#31249F;color:#fff;font-weight:600}'
-            . '</style></head><body><main class="card"><div class="shop">' . $shop . '</div><h1>' . self::e($title) . '</h1>'
+            . '</style></head><body><main class="card" data-ucp-page="' . self::e($page) . '"><div class="shop">' . $shop . '</div><h1>' . self::e($title) . '</h1>'
             . $bodyHtml . '</main></body></html>';
         exit;
     }

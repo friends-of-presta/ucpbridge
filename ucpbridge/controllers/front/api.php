@@ -143,7 +143,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
 
         if ('profile' === $path || 'well-known' === $path) {
             if ('GET' !== $method) {
-                $this->send(405, ['code' => 'method_not_allowed', 'content' => 'GET uniquement']);
+                $this->send(405, ['code' => 'method_not_allowed', 'content' => UcpBridgeI18n::api('GET only')]);
             }
             $this->send(200, $this->profile(), ['Access-Control-Allow-Origin' => '*']);
         }
@@ -160,15 +160,15 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
         if (0 === strpos($bearer, UcpBridgeOAuth::ACCESS_PREFIX)) {
             $this->user = UcpBridgeOAuth::verifyAccess($bearer);
             if (!$this->user) {
-                $this->send(401, ['messages' => [['type' => 'error', 'code' => 'identity_required', 'content' => 'Jeton client invalide, expiré ou révoqué', 'severity' => 'requires_buyer_review']]],
+                $this->send(401, ['messages' => [['type' => 'error', 'code' => 'identity_required', 'content' => UcpBridgeI18n::api('Invalid, expired or revoked customer token'), 'severity' => 'requires_buyer_review']]],
                     ['WWW-Authenticate' => 'Bearer realm="' . $realm . '", error="invalid_token"']);
             }
             $extra = $this->header('X-UCP-Api-Key');
             if ('' !== $extra && null === UcpBridgeApiKeys::authenticate($extra)) {
-                $this->send(401, ['code' => 'unauthorized', 'content' => 'X-UCP-Api-Key invalide'], ['WWW-Authenticate' => 'Bearer realm="ucp"']);
+                $this->send(401, ['code' => 'unauthorized', 'content' => UcpBridgeI18n::api('Invalid X-UCP-Api-Key')], ['WWW-Authenticate' => 'Bearer realm="ucp"']);
             }
         } elseif (null === ($this->platform = UcpBridgeApiKeys::authenticate($bearer))) {
-            $this->send(401, ['code' => 'unauthorized', 'content' => 'Clé API absente ou invalide (Authorization: Bearer)'],
+            $this->send(401, ['code' => 'unauthorized', 'content' => UcpBridgeI18n::api('Missing or invalid API key (Authorization: Bearer)')],
                 ['WWW-Authenticate' => 'Bearer realm="ucp"']);
         }
 
@@ -178,7 +178,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
         if ('' !== trim($raw) && 'mcp' !== $path) {
             $body = json_decode($raw, true);
             if (!is_array($body)) {
-                $this->send(400, ['code' => 'invalid_json', 'content' => 'Corps JSON invalide']);
+                $this->send(400, ['code' => 'invalid_json', 'content' => UcpBridgeI18n::api('Invalid JSON body')]);
             }
         }
 
@@ -207,13 +207,12 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
             $seg = explode('/', $path);
             $need = 'orders' === $seg[0] ? UcpBridgeOAuth::SCOPE_ORDER : UcpBridgeOAuth::SCOPE_CHECKOUT;
             if ('catalog' !== $seg[0] && !in_array($need, $this->user['scopes'], true)) {
-                return [403, ['messages' => [['type' => 'error', 'code' => 'insufficient_scope', 'content' => 'Scope requis : ' . $need, 'severity' => 'requires_buyer_review']]],
+                return [403, ['messages' => [['type' => 'error', 'code' => 'insufficient_scope', 'content' => UcpBridgeI18n::api('Scope required: %scope%', ['%scope%' => $need]), 'severity' => 'requires_buyer_review']]],
                     ['WWW-Authenticate' => 'Bearer realm="' . rtrim($this->context->link->getBaseLink(), '/') . '", error="insufficient_scope", scope="' . $need . '"']];
             }
         }
         if ('' === (string) $idem && self::isMutation($method, $path)) {
-            return [400, ['code' => 'idempotency_key_required', 'content' => 'En-tête Idempotency-Key obligatoire pour ' . $method . ' /' . $path
-                . ' (en MCP : arguments.meta["idempotency-key"])'], []];
+            return [400, ['code' => 'idempotency_key_required', 'content' => UcpBridgeI18n::api('Idempotency-Key header required for %method% /%path% (in MCP: arguments.meta["idempotency-key"])', ['%method%' => $method, '%path%' => $path])], []];
         }
         if ('' === (string) $idem || 'GET' === $method) {
             try {
@@ -221,13 +220,13 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
             } catch (Throwable $e) {
                 PrestaShopLogger::addLog('ucpbridge : ' . $e->getMessage(), 3);
 
-                return [500, ['code' => 'internal_error', 'content' => 'Erreur interne'], []];
+                return [500, ['code' => 'internal_error', 'content' => UcpBridgeI18n::api('Internal error')], []];
             }
 
             return [$code, $doc, []];
         }
         if (strlen($idem) > 255) {
-            return [400, ['code' => 'invalid_idempotency_key', 'content' => 'Idempotency-Key trop longue'], []];
+            return [400, ['code' => 'invalid_idempotency_key', 'content' => UcpBridgeI18n::api('Idempotency-Key too long')], []];
         }
         $hash = UcpBridgeIdempotency::fingerprint($method, $path, $body);
         // Clé cloisonnée par appelant : deux plateformes (chacune sa clé API, ou chacune son client OAuth) ou un invité et
@@ -243,7 +242,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
             UcpBridgeIdempotency::finish($key, 500, null);
             PrestaShopLogger::addLog('ucpbridge : ' . $e->getMessage(), 3);
 
-            return [500, ['code' => 'internal_error', 'content' => 'Erreur interne'], []];
+            return [500, ['code' => 'internal_error', 'content' => UcpBridgeI18n::api('Internal error')], []];
         }
         UcpBridgeIdempotency::finish($key, $code, $doc);
 
@@ -257,11 +256,11 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
         // que la boutique est refusée. Les clients serveur (sans en-tête Origin) ne sont pas concernés.
         $origin = $this->header('Origin');
         if ('' !== $origin && !self::sameOrigin($origin, $this->context->link->getBaseLink())) {
-            $this->send(403, ['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32000, 'message' => 'Origine refusée']]);
+            $this->send(403, ['jsonrpc' => '2.0', 'id' => null, 'error' => ['code' => -32000, 'message' => UcpBridgeI18n::api('Origin refused')]]);
         }
         if ('POST' !== $method) {
             // Pas de flux SSE côté serveur : réponses JSON uniquement (HTTP streamable, mode sans session).
-            $this->send(405, ['code' => 'method_not_allowed', 'content' => 'POST uniquement (JSON-RPC 2.0)'], ['Allow' => 'POST']);
+            $this->send(405, ['code' => 'method_not_allowed', 'content' => UcpBridgeI18n::api('POST only (JSON-RPC 2.0)')], ['Allow' => 'POST']);
         }
         $server = new UcpBridgeMcp(function ($m, $p, array $b, $idem, $agent) {
             $this->agent = $agent;
@@ -312,7 +311,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
         if ($this->user) {
             $svc->setUser($this->user['id_customer']);
         }
-        $notFound = [404, ['code' => 'not_found', 'content' => 'Ressource inconnue : ' . $method . ' /' . $path]];
+        $notFound = [404, ['code' => 'not_found', 'content' => UcpBridgeI18n::api('Unknown resource: %method% /%path%', ['%method%' => $method, '%path%' => $path])]];
 
         switch ($seg[0]) {
             case 'catalog':
@@ -339,7 +338,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
                 }
                 $s = $svc->load($seg[1], 'cart');
                 if (!$s || !$svc->ownedByCaller($s)) {
-                    return [404, $svc->errorDoc([['type' => 'error', 'code' => 'not_found', 'content' => 'Panier introuvable', 'severity' => 'unrecoverable']], ['dev.ucp.shopping.cart'])];
+                    return [404, $svc->errorDoc([['type' => 'error', 'code' => 'not_found', 'content' => UcpBridgeI18n::api('Cart not found'), 'severity' => 'unrecoverable']], ['dev.ucp.shopping.cart'])];
                 }
                 if (!isset($seg[2])) {
                     if ('GET' === $method) {
@@ -360,7 +359,7 @@ class UcpbridgeApiModuleFrontController extends ModuleFrontController
                 }
                 $s = $svc->load($seg[1], 'checkout');
                 if (!$s || !$svc->ownedByCaller($s)) {
-                    return [404, $svc->errorDoc([['type' => 'error', 'code' => 'not_found', 'content' => 'Session de caisse introuvable', 'severity' => 'unrecoverable']], ['dev.ucp.shopping.checkout'])];
+                    return [404, $svc->errorDoc([['type' => 'error', 'code' => 'not_found', 'content' => UcpBridgeI18n::api('Checkout session not found'), 'severity' => 'unrecoverable']], ['dev.ucp.shopping.checkout'])];
                 }
                 if (!isset($seg[2])) {
                     if ('GET' === $method) {

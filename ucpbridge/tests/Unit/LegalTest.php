@@ -64,8 +64,7 @@ final class LegalTest extends TestCase
         $this->assertSame('warning', $m['type']);
         $this->assertSame('disclosure', $m['presentation']);
         $this->assertSame('withdrawal_right', $m['code']);
-        $this->assertStringContainsString('14 jours', $m['content']);
-        $this->assertStringContainsString('rétractation en ligne', $m['content']);
+        $this->assertStringContainsString('14', $m['content']); // texte lisible traduit : seul le délai est vérifié
         $this->assertSame('http://b/content/3', $m['url']);
         $this->assertNull(UcpBridgeLegal::withdrawalDisclosure('CH', 'x'));
     }

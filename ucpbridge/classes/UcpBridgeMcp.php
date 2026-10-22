@@ -18,22 +18,55 @@ class UcpBridgeMcp
 
     /**
      * Outils UCP (binding MCP, mcp.openrpc.json) : méthode HTTP, chemin REST, objet de charge utile,
-     * identifiant requis, Idempotency-Key requise.
+     * identifiant requis, Idempotency-Key requise. Description lisible : description().
      */
     const TOOLS = [
-        'search_catalog' => ['POST', 'catalog/search', 'catalog', false, false, 'Recherche dans le catalogue (texte libre, catalog.query). Renvoie les produits avec leurs variantes, prix et disponibilité.'],
-        'get_product' => ['POST', 'catalog/product', 'catalog', false, false, 'Détail d\'un produit par identifiant (catalog.id : référence produit, référence de déclinaison ou {id_produit}-{id_declinaison}), avec toutes ses variantes.'],
-        'create_cart' => ['POST', 'carts', 'cart', false, true, 'Crée un panier transférable (cart.line_items). meta.idempotency-key obligatoire. Renvoie le panier et son continue_url : lien signé qui ouvre ce panier sur la boutique.'],
-        'get_cart' => ['GET', 'carts/{id}', null, true, false, 'Lit un panier et son continue_url.'],
-        'update_cart' => ['PUT', 'carts/{id}', 'cart', true, true, 'Remplace le contenu d\'un panier (line_items, discounts.codes).'],
-        'cancel_cart' => ['POST', 'carts/{id}/cancel', null, true, true, 'Annule un panier.'],
-        'create_checkout' => ['POST', 'checkout-sessions', 'checkout', false, true, 'Crée une session de caisse (line_items ou cart_id, buyer, fulfillment, discounts).'],
-        'get_checkout' => ['GET', 'checkout-sessions/{id}', null, true, false, 'Lit une session de caisse : statut, totaux, livraison, liens légaux, mentions, continue_url.'],
-        'update_checkout' => ['PUT', 'checkout-sessions/{id}', 'checkout', true, true, 'Met à jour une session de caisse (acheteur, adresse et transporteur, codes promo, consentements).'],
-        'complete_checkout' => ['POST', 'checkout-sessions/{id}/complete', 'checkout', true, true, 'Finalise la session et passe la commande (checkout.payment.instruments). meta.idempotency-key obligatoire.'],
-        'cancel_checkout' => ['POST', 'checkout-sessions/{id}/cancel', null, true, true, 'Annule une session de caisse. meta.idempotency-key obligatoire.'],
-        'get_order' => ['GET', 'orders/{id}', null, true, false, 'Lit une commande passée via UCP.'],
+        'search_catalog' => ['POST', 'catalog/search', 'catalog', false, false],
+        'get_product' => ['POST', 'catalog/product', 'catalog', false, false],
+        'create_cart' => ['POST', 'carts', 'cart', false, true],
+        'get_cart' => ['GET', 'carts/{id}', null, true, false],
+        'update_cart' => ['PUT', 'carts/{id}', 'cart', true, true],
+        'cancel_cart' => ['POST', 'carts/{id}/cancel', null, true, true],
+        'create_checkout' => ['POST', 'checkout-sessions', 'checkout', false, true],
+        'get_checkout' => ['GET', 'checkout-sessions/{id}', null, true, false],
+        'update_checkout' => ['PUT', 'checkout-sessions/{id}', 'checkout', true, true],
+        'complete_checkout' => ['POST', 'checkout-sessions/{id}/complete', 'checkout', true, true],
+        'cancel_checkout' => ['POST', 'checkout-sessions/{id}/cancel', null, true, true],
+        'get_order' => ['GET', 'orders/{id}', null, true, false],
     ];
+
+    /** Description traduite d'un outil (lue par l'agent dans tools/list). */
+    public static function description($name)
+    {
+        switch ($name) {
+            case 'search_catalog':
+                return UcpBridgeI18n::api('Searches the catalog (free text, catalog.query). Returns the products with their variants, prices and availability.');
+            case 'get_product':
+                return UcpBridgeI18n::api('Product details by identifier (catalog.id: product reference, variant reference or {product_id}-{variant_id}), with all its variants.');
+            case 'create_cart':
+                return UcpBridgeI18n::api('Creates a transferable cart (cart.line_items). meta.idempotency-key required. Returns the cart and its continue_url: signed link that opens this cart on the shop.');
+            case 'get_cart':
+                return UcpBridgeI18n::api('Reads a cart and its continue_url.');
+            case 'update_cart':
+                return UcpBridgeI18n::api('Replaces the content of a cart (line_items, discounts.codes).');
+            case 'cancel_cart':
+                return UcpBridgeI18n::api('Cancels a cart.');
+            case 'create_checkout':
+                return UcpBridgeI18n::api('Creates a checkout session (line_items or cart_id, buyer, fulfillment, discounts).');
+            case 'get_checkout':
+                return UcpBridgeI18n::api('Reads a checkout session: status, totals, shipping, legal links, disclosures, continue_url.');
+            case 'update_checkout':
+                return UcpBridgeI18n::api('Updates a checkout session (buyer, address and carrier, discount codes, consents).');
+            case 'complete_checkout':
+                return UcpBridgeI18n::api('Completes the session and places the order (checkout.payment.instruments). meta.idempotency-key required.');
+            case 'cancel_checkout':
+                return UcpBridgeI18n::api('Cancels a checkout session. meta.idempotency-key required.');
+            case 'get_order':
+                return UcpBridgeI18n::api('Reads an order placed through UCP.');
+        }
+
+        return (string) $name;
+    }
 
     const SCHEMA_FILES = ['catalog' => 'catalog_search.json', 'cart' => 'cart.json', 'checkout' => 'checkout.json'];
 
@@ -70,7 +103,7 @@ class UcpBridgeMcp
             return self::error(null, -32700, 'Parse error', null, 400);
         }
         if (array_keys($req) === range(0, count($req) - 1)) {
-            return self::error(null, -32600, 'Les lots JSON-RPC ne sont pas pris en charge', null, 400);
+            return self::error(null, -32600, UcpBridgeI18n::api('JSON-RPC batches are not supported'), null, 400);
         }
         $id = $req['id'] ?? null;
         $isNotification = !array_key_exists('id', $req);
@@ -89,11 +122,7 @@ class UcpBridgeMcp
                     'protocolVersion' => in_array($asked, self::PROTOCOL_VERSIONS, true) ? $asked : self::PROTOCOL_VERSIONS[0],
                     'capabilities' => ['tools' => ['listChanged' => false]],
                     'serverInfo' => $this->serverInfo,
-                    'instructions' => 'Boutique UCP (Universal Commerce Protocol 2026-04-08). Chaque outil exige arguments.meta["ucp-agent"].profile. '
-                        . 'Les déclinaisons sont obligatoires : si un produit en a, précisez la variante (sinon variant_required). '
-                        . 'Les outils qui modifient l\'état (create_*, update_*, cancel_*, complete_checkout) exigent meta["idempotency-key"]. '
-                        . 'create_cart renvoie un continue_url à ouvrir par l\'acheteur ; une session de caisse dont le continue_url est ouvert '
-                        . 'ne peut plus être finalisée par l\'API.',
+                    'instructions' => UcpBridgeI18n::api('UCP shop (Universal Commerce Protocol 2026-04-08). Every tool requires arguments.meta["ucp-agent"].profile. Variants are mandatory: if a product has some, specify the variant (otherwise variant_required). Tools that change state (create_*, update_*, cancel_*, complete_checkout) require meta["idempotency-key"]. create_cart returns a continue_url to be opened by the buyer; a checkout session whose continue_url is opened can no longer be completed through the API.'),
                 ]);
             case 'ping':
                 return self::reply($id, new stdClass());
@@ -110,10 +139,10 @@ class UcpBridgeMcp
     {
         $out = [];
         foreach (self::TOOLS as $name => $t) {
-            list(, , $payload, $needsId, $needsIdem, $description) = $t;
+            list(, , $payload, $needsId, $needsIdem) = $t;
             $meta = [
                 'type' => 'object',
-                'description' => 'Métadonnées UCP : ucp-agent.profile (URL du profil de la plateforme), idempotency-key (UUID)',
+                'description' => UcpBridgeI18n::api('UCP metadata: ucp-agent.profile (URL of the platform profile), idempotency-key (UUID)'),
                 'properties' => [
                     'ucp-agent' => ['type' => 'object', 'properties' => ['profile' => ['type' => 'string']], 'required' => ['profile']],
                     'idempotency-key' => ['type' => 'string'],
@@ -123,16 +152,16 @@ class UcpBridgeMcp
             $props = ['meta' => $meta];
             $required = ['meta'];
             if ($needsId) {
-                $props['id'] = ['type' => 'string', 'description' => 'Identifiant de la ressource'];
+                $props['id'] = ['type' => 'string', 'description' => UcpBridgeI18n::api('Resource identifier')];
                 $required[] = 'id';
             }
             if ($payload) {
-                $props[$payload] = ['type' => 'object', 'description' => 'Objet UCP, schéma ' . self::UCP_SCHEMAS . self::SCHEMA_FILES[$payload]];
+                $props[$payload] = ['type' => 'object', 'description' => UcpBridgeI18n::api('UCP object, schema %schema%', ['%schema%' => self::UCP_SCHEMAS . self::SCHEMA_FILES[$payload]])];
                 $required[] = $payload;
             }
             $out[] = [
                 'name' => $name,
-                'description' => $description,
+                'description' => self::description($name),
                 'inputSchema' => ['type' => 'object', 'properties' => $props, 'required' => $required],
                 'outputSchema' => ['type' => 'object'],
             ];
@@ -146,22 +175,22 @@ class UcpBridgeMcp
         $name = (string) ($params['name'] ?? '');
         $args = is_array($params['arguments'] ?? null) ? $params['arguments'] : [];
         if (!isset(self::TOOLS[$name])) {
-            return self::error($id, -32602, 'Outil inconnu : ' . $name);
+            return self::error($id, -32602, UcpBridgeI18n::api('Unknown tool: %name%', ['%name%' => $name]));
         }
         list($method, $path, $payload, $needsId, $needsIdem) = self::TOOLS[$name];
         $meta = is_array($args['meta'] ?? null) ? $args['meta'] : [];
         $profile = $meta['ucp-agent']['profile'] ?? null;
         if (!is_string($profile) || '' === trim($profile)) {
-            return self::error($id, -32602, 'meta["ucp-agent"].profile est obligatoire');
+            return self::error($id, -32602, UcpBridgeI18n::api('meta["ucp-agent"].profile is required'));
         }
         $idem = isset($meta['idempotency-key']) && is_string($meta['idempotency-key']) ? trim($meta['idempotency-key']) : '';
         if ($needsIdem && '' === $idem) {
-            return self::error($id, -32602, 'meta["idempotency-key"] est obligatoire pour ' . $name);
+            return self::error($id, -32602, UcpBridgeI18n::api('meta["idempotency-key"] is required for %name%', ['%name%' => $name]));
         }
         if ($needsId) {
             $rid = $args['id'] ?? null;
             if (!is_scalar($rid) || !preg_match('/^[A-Za-z0-9_-]{1,64}$/', (string) $rid)) {
-                return self::error($id, -32602, 'id absent ou invalide');
+                return self::error($id, -32602, UcpBridgeI18n::api('id missing or invalid'));
             }
             $path = str_replace('{id}', (string) $rid, $path);
         }
@@ -173,11 +202,11 @@ class UcpBridgeMcp
         list($code, $doc) = call_user_func($this->router, $method, $path, $body, '' !== $idem ? $idem : null, $agent);
 
         if ($code >= 500) {
-            return self::error($id, -32603, 'Erreur interne', $doc, 500);
+            return self::error($id, -32603, UcpBridgeI18n::api('Internal error'), $doc, 500);
         }
         if ($code >= 300) {
             // Erreurs protocolaires (authentification, conflit d'idempotence, ressource inconnue) : JSON-RPC error.
-            return self::error($id, 400 === (int) $code ? -32602 : -32000, (string) ($doc['content'] ?? ($doc['code'] ?? 'Erreur')), $doc, $code);
+            return self::error($id, 400 === (int) $code ? -32602 : -32000, (string) ($doc['content'] ?? ($doc['code'] ?? UcpBridgeI18n::api('Error'))), $doc, $code);
         }
 
         return self::reply($id, [

@@ -35,10 +35,10 @@ class UcpbridgeAccessModuleFrontController extends ModuleFrontController
         if ('POST' === $_SERVER['REQUEST_METHOD']) {
             $client = (string) Tools::getValue('client_id');
             if (!$this->module->checkFormToken($this->context->cookie, 'access|' . $client, Tools::getValue('csrf'))) {
-                $notice = '<p class="err">Le formulaire a expiré : rechargez la page.</p>';
+                $notice = '<p class="err">' . $e(UcpBridgeI18n::shop('The form has expired: reload the page.')) . '</p>';
             } else {
                 UcpBridgeOAuth::revokeAllFor($client, (int) $customer->id);
-                $notice = '<p class="ok">Accès révoqué : ' . $e($client) . ' ne peut plus agir en votre nom.</p>';
+                $notice = '<p class="ok">' . $e(UcpBridgeI18n::shop('Access revoked: %client% can no longer act on your behalf.', ['%client%' => $client])) . '</p>';
             }
         }
         $labels = UcpBridgeOAuth::scopes();
@@ -49,17 +49,17 @@ class UcpbridgeAccessModuleFrontController extends ModuleFrontController
                 $scopes .= '<li>' . $e($labels[$sc] ?? $sc) . '</li>';
             }
             $items .= '<h2>' . $e($g['client_name']) . ' <span class="note">(' . $e($g['client_id']) . ')</span></h2>'
-                . '<p class="note">Relié le ' . $e($g['first_grant']) . ', accès valable jusqu\'au ' . $e($g['expires_at']) . '</p>'
+                . '<p class="note">' . $e(UcpBridgeI18n::shop('Linked on %date%, access valid until %expiry%', ['%date%' => $g['first_grant'], '%expiry%' => $g['expires_at']])) . '</p>'
                 . '<ul>' . $scopes . '</ul>'
                 . '<form method="post" data-client="' . $e($g['client_id']) . '">'
                 . '<input type="hidden" name="client_id" value="' . $e($g['client_id']) . '">'
                 . '<input type="hidden" name="csrf" value="' . $e($this->module->formToken($this->context->cookie, 'access|' . $g['client_id'])) . '">'
-                . '<button type="submit">Révoquer cet accès</button></form>';
+                . '<button type="submit">' . $e(UcpBridgeI18n::shop('Revoke this access')) . '</button></form>';
         }
         $body = $notice
-            . '<p>Assistants autorisés à créer des commandes ou à consulter vos commandes en votre nom.</p>'
-            . ($items ?: '<p>Aucun assistant n\'est relié à votre compte.</p>')
-            . '<p class="note"><a href="' . $e($this->context->link->getPageLink('my-account', true)) . '">Retour à mon compte</a></p>';
-        UcpBridgePage::render('Mes accès agents', $body);
+            . '<p>' . $e(UcpBridgeI18n::shop('Assistants allowed to create orders or to view your orders on your behalf.')) . '</p>'
+            . ($items ?: '<p>' . $e(UcpBridgeI18n::shop('No assistant is linked to your account.')) . '</p>')
+            . '<p class="note"><a href="' . $e($this->context->link->getPageLink('my-account', true)) . '">' . $e(UcpBridgeI18n::shop('Back to my account')) . '</a></p>';
+        UcpBridgePage::render(UcpBridgeI18n::shop('My agent access'), $body, 200, 'agent-access');
     }
 }

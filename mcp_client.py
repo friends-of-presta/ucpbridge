@@ -7,6 +7,7 @@ Bibliothèque standard uniquement. Copyright (c) 2026 Friends of Presta. Auteur 
 """
 import argparse
 import json
+import os
 import subprocess
 import sys
 import urllib.error
@@ -116,7 +117,7 @@ def main():
     a = a.parse_args()
     if not a.url.startswith(("http://localhost", "http://127.0.0.1", "https://")):
         sys.exit("URL locale ou HTTPS attendue")
-    jeton = a.token or json.loads(subprocess.run(["docker", "exec", "bench-ucp-bridge-mysql-1", "mysql", "-uroot", "-pbench", "-N", "-B", "prestashop",
+    jeton = a.token or json.loads(subprocess.run(["docker", "exec", os.environ.get("UCP_PROJECT", "bench-ucp-bridge") + "-mysql-1", "mysql", "-uroot", "-pbench", "-N", "-B", "prestashop",
                                                   "-e", "SELECT value FROM ps_configuration WHERE name='UCPBRIDGE_API_KEYS'"],
                                                  capture_output=True, text=True).stdout.strip().splitlines()[-1])["default"]["key"]
     scenario(ClientMcp(a.url, jeton))

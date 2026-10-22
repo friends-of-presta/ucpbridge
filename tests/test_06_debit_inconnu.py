@@ -9,6 +9,7 @@ le banc) pointe vers lui le temps du test, puis revient au stripe-mock du banc.
 Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE.
 """
 import json
+import re
 import subprocess
 import time
 
@@ -94,7 +95,7 @@ def verifier_debit_incertain(boutique, sid, cart, reponse):
     vieillir(sid)
     rc, out = rapprocher(10)
     assert rc == 0, out
-    assert f"{sid} : débit incertain, à vérifier chez le prestataire" in out, out
+    assert re.search(rf"^{sid} : .* \[charge_unknown\]$", out, re.M), out
     assert statut(sid) == "failed"
     g = boutique.get(f"/checkout-sessions/{sid}").doc
     assert g["status"] == "canceled" and "payment_verification" in {m["code"] for m in g["messages"]}
@@ -162,4 +163,4 @@ def test_exception_de_l_adaptateur_pendant_le_debit_reste_engagee(boutique):
     assert not commandes(cart)
     vieillir(sid)
     rc, out = rapprocher(10)
-    assert f"{sid} : débit incertain, à vérifier chez le prestataire" in out, out
+    assert re.search(rf"^{sid} : .* \[charge_unknown\]$", out, re.M), out

@@ -21,7 +21,11 @@ class UcpBridgeApiKeys
     const LEGACY = 'UCPBRIDGE_API_KEY';
     const PREFIX = 'ucpk_';
     const DEFAULT_ID = 'default';
-    const DEFAULT_LABEL = 'Plateforme par défaut';
+    /** Nom de la plateforme par défaut, enregistré dans la langue de l'installation. */
+    public static function defaultLabel()
+    {
+        return UcpBridgeI18n::admin('Default platform');
+    }
 
     /* ------------------------------ Logique pure (testée sans PrestaShop) ------------------------------ */
 
@@ -71,29 +75,55 @@ class UcpBridgeApiKeys
             return $keys;
         }
 
-        return [self::DEFAULT_ID => ['label' => self::DEFAULT_LABEL, 'key' => $legacy, 'date_add' => (string) $now]] + $keys;
+        return [self::DEFAULT_ID => ['label' => self::defaultLabel(), 'key' => $legacy, 'date_add' => (string) $now]] + $keys;
+    }
+
+    /** Clés d'une installation neuve : la seule plateforme par défaut, avec une clé générée. */
+    public static function initial($now)
+    {
+        return [self::DEFAULT_ID => ['label' => self::defaultLabel(), 'key' => self::generate(), 'date_add' => (string) $now]];
+    }
+
+    /** Valeur stockée en configuration (objet JSON, même vide). */
+    public static function encode(array $keys)
+    {
+        return json_encode((object) $keys, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
     /* ------------------------------ Configuration de la boutique ------------------------------ */
 
     public static function all()
     {
-        $keys = json_decode((string) Configuration::get(self::CONFIG), true);
-        $keys = is_array($keys) ? $keys : [];
-        $legacy = (string) Configuration::get(self::LEGACY);
-        if ('' !== $legacy) {
-            // Migration à la première lecture (module mis à jour sans réinstallation).
-            $keys = self::migrate($keys, $legacy, date('Y-m-d H:i:s'));
-            self::save($keys);
-            Configuration::deleteByName(self::LEGACY);
-        }
+        $keys = [];
+        self::migrateLegacy($keys);
 
         return $keys;
     }
 
+    /**
+     * Migration de la clé unique des versions précédentes (module mis à jour sans réinstallation), faite à la première
+     * lecture et en tête de la mise à jour. L'ancienne clé n'est supprimée qu'après l'enregistrement réussi de la
+     * nouvelle liste : si l'écriture échoue, elle reste en place (et acceptée, $keys la contient) et la migration est
+     * retentée à la lecture suivante. $keys reçoit les clés à utiliser.
+     *
+     * @return bool false si la migration n'a pas pu être enregistrée
+     */
+    public static function migrateLegacy(&$keys = null)
+    {
+        $keys = json_decode((string) Configuration::get(self::CONFIG), true);
+        $keys = is_array($keys) ? $keys : [];
+        $legacy = (string) Configuration::get(self::LEGACY);
+        if ('' === $legacy) {
+            return true;
+        }
+        $keys = self::migrate($keys, $legacy, date('Y-m-d H:i:s'));
+
+        return self::save($keys) && Configuration::deleteByName(self::LEGACY);
+    }
+
     private static function save(array $keys)
     {
-        return Configuration::updateValue(self::CONFIG, json_encode((object) $keys, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        return Configuration::updateValue(self::CONFIG, self::encode($keys));
     }
 
     /** Plateforme authentifiée par la clé présentée, ou null. */

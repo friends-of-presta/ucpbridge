@@ -4,6 +4,37 @@ use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../../classes/UcpBridgeApiKeys.php';
 
+if (!class_exists('Configuration')) {
+    /** Configuration de PrestaShop simulée en mémoire (écriture qui échoue sur demande). */
+    class Configuration
+    {
+        public static $values = [];
+        public static $failWrites = false;
+
+        public static function get($k)
+        {
+            return self::$values[$k] ?? false;
+        }
+
+        public static function updateValue($k, $v)
+        {
+            if (self::$failWrites) {
+                return false;
+            }
+            self::$values[$k] = (string) $v;
+
+            return true;
+        }
+
+        public static function deleteByName($k)
+        {
+            unset(self::$values[$k]);
+
+            return true;
+        }
+    }
+}
+
 /** Une clé API par plateforme (issue #5). */
 final class ApiKeysTest extends TestCase
 {
@@ -66,5 +97,36 @@ final class ApiKeysTest extends TestCase
         $k = UcpBridgeApiKeys::generate();
         $this->assertMatchesRegularExpression('/^ucpk_[0-9a-f]{48}$/', $k);
         $this->assertNotSame($k, UcpBridgeApiKeys::generate());
+    }
+
+    public function testInstallationNeuveUneSeulePlateforme(): void
+    {
+        $k = UcpBridgeApiKeys::initial('2026-10-22 10:00:00');
+        $this->assertSame(['default'], array_keys($k));
+        $this->assertMatchesRegularExpression('/^ucpk_[0-9a-f]{48}$/', $k['default']['key']);
+        $this->assertSame('default', UcpBridgeApiKeys::match($k, $k['default']['key']));
+        $this->assertSame('{}', UcpBridgeApiKeys::encode([]));
+        $this->assertSame($k, json_decode(UcpBridgeApiKeys::encode($k), true));
+    }
+
+    public function testAncienneCleGardeeSiLaNouvelleNEstPasEnregistree(): void
+    {
+        Configuration::$values = [UcpBridgeApiKeys::LEGACY => self::A];
+        Configuration::$failWrites = true;
+        try {
+            // Écriture refusée (base en erreur) : migration en échec, clé historique conservée et toujours acceptée.
+            $this->assertFalse(UcpBridgeApiKeys::migrateLegacy());
+            $this->assertSame(self::A, Configuration::get(UcpBridgeApiKeys::LEGACY));
+            $this->assertSame('default', UcpBridgeApiKeys::authenticate(self::A));
+            $this->assertSame(self::A, Configuration::get(UcpBridgeApiKeys::LEGACY));
+        } finally {
+            Configuration::$failWrites = false;
+        }
+        // Écriture rétablie : migrée, puis seulement supprimée.
+        $this->assertTrue(UcpBridgeApiKeys::migrateLegacy());
+        $this->assertFalse(Configuration::get(UcpBridgeApiKeys::LEGACY));
+        $this->assertSame(self::A, json_decode(Configuration::get(UcpBridgeApiKeys::CONFIG), true)['default']['key']);
+        $this->assertTrue(UcpBridgeApiKeys::migrateLegacy()); // rien à migrer
+        Configuration::$values = [];
     }
 }

@@ -13,6 +13,8 @@ if (!defined('_PS_VERSION_')) {
 class UcpBridgeProof
 {
     const JSON_FIELDS = ['links', 'disclosures', 'totals', 'consent', 'terms_acceptance'];
+    /** Tables conservées à la désinstallation, sauf choix explicite de les supprimer. */
+    const EVIDENCE_TABLES = ['ucpbridge_proof', 'ucpbridge_withdrawal', 'ucpbridge_payment'];
 
     public static function installDb()
     {
@@ -78,11 +80,19 @@ class UcpBridgeProof
         ]);
     }
 
-    public static function uninstallDb()
+    /**
+     * Désinstallation : le journal de preuve, les rétractations et le journal des paiements sont conservés (le marchand
+     * peut devoir les produire en cas de litige, et une réinstallation les retrouve). Ils ne sont supprimés que sur
+     * choix explicite ($drop, option « supprimer à la désinstallation » de la configuration).
+     */
+    public static function uninstallDb($drop = false)
     {
-        Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_proof`');
-        Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_withdrawal`');
-        Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_payment`');
+        if (!$drop) {
+            return;
+        }
+        foreach (self::EVIDENCE_TABLES as $t) {
+            Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . $t . '`');
+        }
     }
 
     private static function json($v)

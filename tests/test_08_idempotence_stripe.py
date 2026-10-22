@@ -10,6 +10,7 @@ Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast
 """
 import http.server
 import json
+import os
 import threading
 import urllib.error
 import urllib.request
@@ -21,7 +22,10 @@ from test_04_relecture import complete, id_cart
 from test_05_relecture2 import commandes
 
 PORT = 12197
-STRIPE_MOCK = "http://localhost:12111"
+STRIPE_MOCK = os.environ.get("STRIPE_MOCK", "http://localhost:12111")
+# Adresse d'écoute du faux Stripe : la boucle locale suffit avec Docker Desktop ; sous Linux (intégration continue),
+# la boutique le joint par la passerelle docker (host-gateway), il faut donc écouter sur 0.0.0.0.
+HOTE = os.environ.get("FAUX_STRIPE_HOTE", "127.0.0.1")
 
 
 class FauxStripe(http.server.BaseHTTPRequestHandler):
@@ -69,7 +73,7 @@ class FauxStripe(http.server.BaseHTTPRequestHandler):
 @pytest.fixture
 def faux_stripe():
     FauxStripe.refus, FauxStripe.cles = 1, {}
-    serveur = http.server.ThreadingHTTPServer(("127.0.0.1", PORT), FauxStripe)
+    serveur = http.server.ThreadingHTTPServer((HOTE, PORT), FauxStripe)
     threading.Thread(target=serveur.serve_forever, daemon=True).start()
     ancien = config("UCPBRIDGE_STRIPE_API_BASE")
     set_config("UCPBRIDGE_STRIPE_API_BASE", f"http://host.docker.internal:{PORT}")

@@ -243,13 +243,12 @@ def test_i2_mes_acces_agents_revocation_par_le_client(boutique):
         page.click("#login-form button[type=submit]")
         page.wait_for_load_state("networkidle")
         page.goto(f"{BASE}/index.php?controller=my-account")
-        assert "accès agents" in page.inner_text("body").lower()
+        assert page.locator("#ucpbridge-access-link").count() >= 1  # le thème peut afficher le lien deux fois
         page.goto(page_acces)
-        texte = page.inner_text("body")
-        assert "Mes accès agents" in texte and CLIENT_ID in texte
+        assert page.get_attribute("main", "data-ucp-page") == "agent-access" and CLIENT_ID in page.inner_text("body")
         page.click(f"form[data-client='{CLIENT_ID}'] button[type=submit]")
         page.wait_for_load_state("networkidle")
-        assert "révoqué" in page.inner_text("body").lower()
+        assert page.locator("p.ok").count() == 1 and page.locator(f"form[data-client='{CLIENT_ID}']").count() == 0
         nav.close()
     assert boutique.get("/orders/ord_000000000000000000000000", jeton=acces).code == 401
 
@@ -257,8 +256,8 @@ def test_i2_mes_acces_agents_revocation_par_le_client(boutique):
 def test_i2_liste_et_revocation_cote_marchand(boutique):
     acces = jeton_direct()
     html = php("Context::getContext()->employee = new Employee(1); echo Module::getInstanceByName('ucpbridge')->getContent();")
-    assert "Accès agents actifs" in html and CLIENT_ID in html
-    jeton_bo = re.search(r'name="ucp_csrf" value="([0-9a-f]+)"', html).group(1)
+    assert 'id="ucpbridge-grants"' in html and CLIENT_ID in html
+    jeton_bo = re.search(r'name="ucp_csrf"[^>]*value="([0-9a-f]+)"', html).group(1)
     php("Context::getContext()->employee = new Employee(1); "
         f"$_POST = ['submitUcpbridgeRevoke' => '1', 'ucp_csrf' => '{jeton_bo}', 'revoke_client' => {json.dumps(CLIENT_ID)}, "
         f"'revoke_customer' => '{id_client_demo()}']; echo Module::getInstanceByName('ucpbridge')->getContent();")

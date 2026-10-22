@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE. -->
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="ucpbridge" source-language="en-US" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="6713a17e91dae4f389977460abf12078">
+        <source>"%name%" exists in several variants: specify item.variant_id among %variants%</source>
+        <target>« %name% » existe en plusieurs déclinaisons : précisez item.variant_id parmi %variants%</target>
+      </trans-unit>
+      <trans-unit id="6d49f831a88d3397d58377c93972e457">
+        <source>%title%, sold out</source>
+        <target>%title%, épuisé</target>
+      </trans-unit>
+      <trans-unit id="97139627c126d86a74d8ab820ad756d6">
+        <source>(none)</source>
+        <target>(aucun)</target>
+      </trans-unit>
+      <trans-unit id="72aa50efcdc319067f3bed54f81a5b2d">
+        <source>A request with this Idempotency-Key is still in progress</source>
+        <target>Une requête avec cette Idempotency-Key est encore en cours</target>
+      </trans-unit>
+      <trans-unit id="7d7283b9c1db2f47c17eb4c7417aaa71">
+        <source>Access revoked by the customer or the merchant</source>
+        <target>Accès révoqué par le client ou le marchand</target>
+      </trans-unit>
+      <trans-unit id="e16c363c000c417cc6d8b800ffc9d1f3">
+        <source>Address refused by the shop</source>
+        <target>Adresse refusée par la boutique</target>
+      </trans-unit>
+      <trans-unit id="d31d8636be32d6f19bbdeb5f525755ad">
+        <source>Address refused: %reason%</source>
+        <target>Adresse refusée : %reason%</target>
+      </trans-unit>
+      <trans-unit id="4d95e66d931a990ee097872454572051">
+        <source>Automatic refund impossible: the merchant has been alerted and must refund</source>
+        <target>Remboursement automatique impossible : le marchand est alerté et doit rembourser</target>
+      </trans-unit>
+      <trans-unit id="537a63b336fd3d62ec6f4fe976f0225b">
+        <source>Buyer e-mail required</source>
+        <target>E-mail de l'acheteur requis</target>
+      </trans-unit>
+      <trans-unit id="2961e39588bb698837e0dff67098b700">
+        <source>Cancels a cart.</source>
+        <target>Annule un panier.</target>
+      </trans-unit>
+      <trans-unit id="e9e59789955c7ed027030bb262fa4a14">
+        <source>Cancels a checkout session. meta.idempotency-key required.</source>
+        <target>Annule une session de caisse. meta.idempotency-key obligatoire.</target>
+      </trans-unit>
+      <trans-unit id="e533fa672d70b589fee776b6829daca8">
+        <source>Cart being modified: try again</source>
+        <target>Panier en cours de modification : réessayer</target>
+      </trans-unit>
+      <trans-unit id="e4e1cdf8e97034d214cb5fea4da089de">
+        <source>Cart canceled</source>
+        <target>Panier annulé</target>
+      </trans-unit>
+      <trans-unit id="d6643e4c3a8976f5cc0755887da08c5c">
+        <source>Cart empty, with a zero amount or modified during completion: no charge</source>
+        <target>Panier vide, à montant nul ou modifié pendant la finalisation : aucun débit</target>
+      </trans-unit>
+      <trans-unit id="2a5402112f538232c011597809a1f784">
+        <source>Cart expired or canceled</source>
+        <target>Panier expiré ou annulé</target>
+      </trans-unit>
+      <trans-unit id="e61f52d02b9f52fbe1fd41ed320e29c3">
+        <source>Cart not found</source>
+        <target>Panier introuvable</target>
+      </trans-unit>
+      <trans-unit id="4532c8d1cdf1002d17fc10f77a9a4382">
+        <source>Checkout session not found</source>
+        <target>Session de caisse introuvable</target>
+      </trans-unit>
+      <trans-unit id="8fb37535c12fbe2899ab442ec474c157">
+        <source>Choose a shipping option</source>
+        <target>Choisir une option de livraison</target>
+      </trans-unit>
+      <trans-unit id="f2de9312e4425cfa82422474b4d8a077">
+        <source>Choose an address before the carrier</source>
+        <target>Choisir une adresse avant le transporteur</target>
+      </trans-unit>
+      <trans-unit id="89e7837dfe17611a0cfdf6690c3add4b">
+        <source>Code already used</source>
+        <target>Code déjà utilisé</target>
+      </trans-unit>
+      <trans-unit id="0542a3ea19d3a88e51258591f1f97807">
+        <source>Code expired</source>
+        <target>Code expiré</target>
+      </trans-unit>
+      <trans-unit id="43ee402579a47473fd23a036fcd012a9">
+        <source>Completes the session and places the order (checkout.payment.instruments). meta.idempotency-key required.</source>
+        <target>Finalise la session et passe la commande (checkout.payment.instruments). meta.idempotency-key obligatoire.</target>
+      </trans-unit>
+      <trans-unit id="327c9950df51853c4e6cdceb804f817c">
+        <source>Completion in progress</source>
+        <target>Finalisation en cours</target>
+      </trans-unit>
+      <trans-unit id="fca3533fe3f601479fc1d9fc7dc2eb41">
+        <source>Completion was interrupted before the order was created</source>
+        <target>La finalisation a été interrompue avant la création de la commande</target>
+      </trans-unit>
+      <trans-unit id="0c43a1fbacf24aac0295eee808d346e2">
+        <source>Country not delivered by the shop: %country%</source>
+        <target>Pays non livré par la boutique : %country%</target>
+      </trans-unit>
+      <trans-unit id="43c3ae77f8019cc6706d441f3791e3c8">
+        <source>Creates a checkout session (line_items or cart_id, buyer, fulfillment, discounts).</source>
+        <target>Crée une session de caisse (line_items ou cart_id, buyer, fulfillment, discounts).</target>
+      </trans-unit>
+      <trans-unit id="c2b329fb2e10f7102ceb7176a35cd7c3">
+        <source>Creates a transferable cart (cart.line_items). meta.idempotency-key required. Returns the cart and its continue_url: signed link that opens this cart on the shop.</source>
+        <target>Crée un panier transférable (cart.line_items). meta.idempotency-key obligatoire. Renvoie le panier et son continue_url : lien signé qui ouvre ce panier sur la boutique.</target>
+      </trans-unit>
+      <trans-unit id="8235addcb7d46353af27ff85ebb6c21c">
+        <source>Discounts excl. tax</source>
+        <target>Réductions HT</target>
+      </trans-unit>
+      <trans-unit id="fda084bba03788bb61604eba55cb0de8">
+        <source>Discounts incl. tax</source>
+        <target>Réductions TTC</target>
+      </trans-unit>
+      <trans-unit id="902b0d55fddef6f8d651fe1035b7d4bd">
+        <source>Error</source>
+        <target>Erreur</target>
+      </trans-unit>
+      <trans-unit id="b486d6fad66fb99a6c317d65d78668c8">
+        <source>Estimated total incl. tax (shipping calculated at checkout)</source>
+        <target>Total estimé TTC (livraison calculée à la caisse)</target>
+      </trans-unit>
+      <trans-unit id="9894d4ef5136680bb8674c03a07ab504">
+        <source>GET only</source>
+        <target>GET uniquement</target>
+      </trans-unit>
+      <trans-unit id="08439e16459a965806561add4baeb367">
+        <source>Google Pay (test)</source>
+        <target>Google Pay (test)</target>
+      </trans-unit>
+      <trans-unit id="a0a280f8b67371c0079c4ed148d2a93c">
+        <source>Google Pay disabled: Stripe test key missing</source>
+        <target>Google Pay désactivé : clé Stripe de test absente</target>
+      </trans-unit>
+      <trans-unit id="407ad67a7d56a1511a7ef817eb319742">
+        <source>Idempotency-Key already used with a different request</source>
+        <target>Idempotency-Key déjà utilisée avec une requête différente</target>
+      </trans-unit>
+      <trans-unit id="075b32279f7c64e18e260eff6293e8cd">
+        <source>Idempotency-Key header required for %method% /%path% (in MCP: arguments.meta["idempotency-key"])</source>
+        <target>En-tête Idempotency-Key obligatoire pour %method% /%path% (en MCP : arguments.meta["idempotency-key"])</target>
+      </trans-unit>
+      <trans-unit id="4f8bda7553fb7529ee9b6476cd6fb945">
+        <source>Idempotency-Key too long</source>
+        <target>Idempotency-Key trop longue</target>
+      </trans-unit>
+      <trans-unit id="c915c175b2561d7668b5646971d2bc5c">
+        <source>Inconsistent charged amount</source>
+        <target>Montant débité incohérent</target>
+      </trans-unit>
+      <trans-unit id="c0e870cf1961dd92f4eea1a76b3dcd6f">
+        <source>Insufficient stock for this variant</source>
+        <target>Stock insuffisant pour cette déclinaison</target>
+      </trans-unit>
+      <trans-unit id="9950e713122fa05ff75b955df45aa549">
+        <source>Insufficient stock for this variant (%count% available)</source>
+        <target>Stock insuffisant pour cette déclinaison (%count% disponible(s))</target>
+      </trans-unit>
+      <trans-unit id="8f8913c1f755436db84ae169e37c61f9">
+        <source>Internal error</source>
+        <target>Erreur interne</target>
+      </trans-unit>
+      <trans-unit id="277c12e726a168fe30456e2cd60cfb71">
+        <source>Invalid JSON body</source>
+        <target>Corps JSON invalide</target>
+      </trans-unit>
+      <trans-unit id="65e41de5b638cd8946dede8242ad2fd7">
+        <source>Invalid X-UCP-Api-Key</source>
+        <target>X-UCP-Api-Key invalide</target>
+      </trans-unit>
+      <trans-unit id="6e659c47c94d1e1dc7121859f43fb2b0">
+        <source>Invalid e-mail address</source>
+        <target>Adresse e-mail invalide</target>
+      </trans-unit>
+      <trans-unit id="fbac0811617822c922df0f26939b64d4">
+        <source>Invalid postal code for %country%</source>
+        <target>Code postal invalide pour %country%</target>
+      </trans-unit>
+      <trans-unit id="01816dd287bcb3b88ad3f63970ce045f">
+        <source>Invalid quantity</source>
+        <target>Quantité invalide</target>
+      </trans-unit>
+      <trans-unit id="6d3b5c2b2c7c20cd8907a0b090f0e89c">
+        <source>Invalid refresh token</source>
+        <target>Jeton de rafraîchissement invalide</target>
+      </trans-unit>
+      <trans-unit id="98b9dd792da63d13a0b18bca5b4c4b5d">
+        <source>Invalid, expired or revoked customer token</source>
+        <target>Jeton client invalide, expiré ou révoqué</target>
+      </trans-unit>
+      <trans-unit id="7f7036a0b3a5fb11cc20391dffb78d03">
+        <source>Item not available for sale: %id%</source>
+        <target>Article non disponible à la vente : %id%</target>
+      </trans-unit>
+      <trans-unit id="72d8f565d7cd4de60c481f899bd247e8">
+        <source>Item not found: %id%</source>
+        <target>Article introuvable : %id%</target>
+      </trans-unit>
+      <trans-unit id="b19a791e678b6ccf77f9cf7c6706a8c3">
+        <source>JSON-RPC batches are not supported</source>
+        <target>Les lots JSON-RPC ne sont pas pris en charge</target>
+      </trans-unit>
+      <trans-unit id="8e4755c8740d21c8d83bf85e1f17cdc7">
+        <source>Missing address field: %field%</source>
+        <target>Champ d'adresse manquant : %field%</target>
+      </trans-unit>
+      <trans-unit id="c467b2b2f65b081b6803e175c4eff1af">
+        <source>Missing or invalid API key (Authorization: Bearer)</source>
+        <target>Clé API absente ou invalide (Authorization: Bearer)</target>
+      </trans-unit>
+      <trans-unit id="ba5c89298ef2d76ba292e66eb8d77b3c">
+        <source>No carrier delivers this address</source>
+        <target>Aucun transporteur ne livre cette adresse</target>
+      </trans-unit>
+      <trans-unit id="77c3c5a5d4f104c91b62782652b096ba">
+        <source>Order already placed</source>
+        <target>Commande déjà passée</target>
+      </trans-unit>
+      <trans-unit id="24909e87dc242b9dd539e10609b8b050">
+        <source>Order not found</source>
+        <target>Commande introuvable</target>
+      </trans-unit>
+      <trans-unit id="dda914b429d5b4815ed237ae3c36dcd3">
+        <source>Origin refused</source>
+        <target>Origine refusée</target>
+      </trans-unit>
+      <trans-unit id="942ac17120bbf7744b988607591a71cd">
+        <source>PKCE S256 required</source>
+        <target>PKCE S256 obligatoire</target>
+      </trans-unit>
+      <trans-unit id="9124954114f5fadac4fd6ab21c6f787c">
+        <source>POST only</source>
+        <target>POST uniquement</target>
+      </trans-unit>
+      <trans-unit id="abfaefb23cf7fc7669b991d8d5453147">
+        <source>POST only (JSON-RPC 2.0)</source>
+        <target>POST uniquement (JSON-RPC 2.0)</target>
+      </trans-unit>
+      <trans-unit id="5585a5da58383f8875d64160ea98923e">
+        <source>Payment gateway error (HTTP %code%): charge to be checked</source>
+        <target>Erreur de la passerelle de paiement (HTTP %code%) : débit à vérifier</target>
+      </trans-unit>
+      <trans-unit id="3208593bcde7839d0bfb1bb084a94780">
+        <source>Payment gateway response lost: charge to be checked</source>
+        <target>Réponse de la passerelle de paiement perdue : débit à vérifier</target>
+      </trans-unit>
+      <trans-unit id="9b50e39b3786e44f45602c785520f604">
+        <source>Payment gateway unreachable, try again later</source>
+        <target>Passerelle de paiement injoignable, réessayer plus tard</target>
+      </trans-unit>
+      <trans-unit id="dbabb9a0089d2ca6aae0cfeea92dc023">
+        <source>Payment not confirmed by the gateway (status %status%)</source>
+        <target>Paiement non confirmé par la passerelle (statut %status%)</target>
+      </trans-unit>
+      <trans-unit id="8a032192fd3d83ad80ceb4dda634d225">
+        <source>Payment refused: %reason%</source>
+        <target>Paiement refusé : %reason%</target>
+      </trans-unit>
+      <trans-unit id="c033e153bac6954db89f4056990f1323">
+        <source>Payment result unknown: do not retry with another payment method, the merchant checks with the payment provider and refunds if a charge took place</source>
+        <target>Résultat du paiement inconnu : ne pas relancer avec un autre moyen de paiement, le marchand vérifie auprès du prestataire de paiement et rembourse si un débit a eu lieu</target>
+      </trans-unit>
+      <trans-unit id="fbe3f219cdb33a519cbb26d96be8b3c6">
+        <source>Product details by identifier (catalog.id: product reference, variant reference or {product_id}-{variant_id}), with all its variants.</source>
+        <target>Détail d'un produit par identifiant (catalog.id : référence produit, référence de déclinaison ou {id_produit}-{id_declinaison}), avec toutes ses variantes.</target>
+      </trans-unit>
+      <trans-unit id="527cce7d7c919836f68f2ae5a0ece050">
+        <source>Product not found: %id%</source>
+        <target>Produit introuvable : %id%</target>
+      </trans-unit>
+      <trans-unit id="8f47e052c43a9631916511a3b28e2569">
+        <source>Reads a cart and its continue_url.</source>
+        <target>Lit un panier et son continue_url.</target>
+      </trans-unit>
+      <trans-unit id="19f23524b339f84b2fbb0fc0aad29f30">
+        <source>Reads a checkout session: status, totals, shipping, legal links, disclosures, continue_url.</source>
+        <target>Lit une session de caisse : statut, totaux, livraison, liens légaux, mentions, continue_url.</target>
+      </trans-unit>
+      <trans-unit id="9cbe4e9150c9812bb1f8fb2f2d6d57b9">
+        <source>Reads an order placed through UCP.</source>
+        <target>Lit une commande passée via UCP.</target>
+      </trans-unit>
+      <trans-unit id="b671940043c6c1962326e40832a451d3">
+        <source>Refresh token already used or revoked</source>
+        <target>Jeton de rafraîchissement déjà utilisé ou révoqué</target>
+      </trans-unit>
+      <trans-unit id="ee8ea61e704bae83981d559de7c8fb95">
+        <source>Refund refused: %reason%</source>
+        <target>Remboursement refusé : %reason%</target>
+      </trans-unit>
+      <trans-unit id="6b478831f87a345fd863162e412012b0">
+        <source>Replaces the content of a cart (line_items, discounts.codes).</source>
+        <target>Remplace le contenu d'un panier (line_items, discounts.codes).</target>
+      </trans-unit>
+      <trans-unit id="de714e8b5620e2faad291c1053ffdc40">
+        <source>Resource identifier</source>
+        <target>Identifiant de la ressource</target>
+      </trans-unit>
+      <trans-unit id="2bbe0ffd05b7174fde70c03db7f7bd8f">
+        <source>Right of withdrawal: you have 14 days from receipt of your order to withdraw, without having to give any reason. An online withdrawal function is available from the order confirmation e-mail.</source>
+        <target>Droit de rétractation : vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, sans avoir à vous justifier. Une fonction de rétractation en ligne est accessible depuis l'e-mail de confirmation de commande.</target>
+      </trans-unit>
+      <trans-unit id="4cbba30437198300170e14f745f25ec2">
+        <source>Scope required: %scope%</source>
+        <target>Scope requis : %scope%</target>
+      </trans-unit>
+      <trans-unit id="400e9fab8c23de775c84744b1878a405">
+        <source>Searches the catalog (free text, catalog.query). Returns the products with their variants, prices and availability.</source>
+        <target>Recherche dans le catalogue (texte libre, catalog.query). Renvoie les produits avec leurs variantes, prix et disponibilité.</target>
+      </trans-unit>
+      <trans-unit id="957286ceca3d673d7c081f0969bff9f1">
+        <source>Session %status%: cannot be modified</source>
+        <target>Session %status% : modification impossible</target>
+      </trans-unit>
+      <trans-unit id="78a8dcbf19ba66dead5fa4fee8e6b78e">
+        <source>Session reserved (completion or update in progress): modification refused</source>
+        <target>Session réservée (finalisation ou mise à jour en cours) : modification refusée</target>
+      </trans-unit>
+      <trans-unit id="4dadfc65c680b48bef6340ec5ba108a6">
+        <source>Session update in progress: completion refused, try again</source>
+        <target>Mise à jour de la session en cours : finalisation refusée, réessayer</target>
+      </trans-unit>
+      <trans-unit id="2155da116720b7758e4fcb1f4e2a317b">
+        <source>Shipping address required</source>
+        <target>Adresse de livraison requise</target>
+      </trans-unit>
+      <trans-unit id="968427932a8ac5b07731f1532162143b">
+        <source>Shipping excl. tax</source>
+        <target>Livraison HT</target>
+      </trans-unit>
+      <trans-unit id="9e2b71e5e62dbf43bfba1747c45ade97">
+        <source>Stripe error</source>
+        <target>erreur Stripe</target>
+      </trans-unit>
+      <trans-unit id="06167a9653812cc2ab2844ec744ee7a4">
+        <source>Stripe refund</source>
+        <target>Remboursement Stripe</target>
+      </trans-unit>
+      <trans-unit id="c49911f49b30bee51a15eb191210a3e2">
+        <source>Stripe test key missing: refund to be made in the Stripe dashboard</source>
+        <target>Clé Stripe de test absente : remboursement à faire dans le tableau de bord Stripe</target>
+      </trans-unit>
+      <trans-unit id="63ca38070bc990e42d8ae931f82ce67c">
+        <source>Strong authentication (3-D Secure) required: the buyer must finish the payment on the shop</source>
+        <target>Authentification forte (3-D Secure) requise : l'acheteur doit finir le paiement sur la boutique</target>
+      </trans-unit>
+      <trans-unit id="618bd419da5de150405d897b2a93c1c2">
+        <source>Subtotal excl. tax</source>
+        <target>Sous-total HT</target>
+      </trans-unit>
+      <trans-unit id="bde783e0dc88c07015c84d9fa1c9c4a9">
+        <source>Subtotal incl. tax</source>
+        <target>Sous-total TTC</target>
+      </trans-unit>
+      <trans-unit id="167f9f321b123d57f892732177c1a292">
+        <source>Test payment refused (incorrect simulation token)</source>
+        <target>Paiement de test refusé (jeton de simulation incorrect)</target>
+      </trans-unit>
+      <trans-unit id="0bbb7650d0965c3e760a01bf0eba37ef">
+        <source>Test refund</source>
+        <target>Remboursement de test</target>
+      </trans-unit>
+      <trans-unit id="8dd27063c5c6aeff6588093f9d1fa6a2">
+        <source>The buyer must review and accept the terms of sale on the shop before ordering</source>
+        <target>L'acheteur doit relire et accepter les conditions générales de vente sur la boutique avant la commande</target>
+      </trans-unit>
+      <trans-unit id="9a2b15f209d91e461e35de7ee8643af9">
+        <source>The buyer took this cart over on the shop (continue link opened): it can no longer be modified through the API</source>
+        <target>L'acheteur a repris ce panier sur la boutique (lien de reprise ouvert) : il ne peut plus être modifié par l'API</target>
+      </trans-unit>
+      <trans-unit id="3209c7cf45a07a53fdbf63ccd6d48c95">
+        <source>The buyer took this cart over on the shop (continue link opened): the session can no longer be completed through the API</source>
+        <target>L'acheteur a repris ce panier sur la boutique (lien de reprise ouvert) : la session ne peut plus être finalisée par l'API</target>
+      </trans-unit>
+      <trans-unit id="fd3b66c68fa623323b9d509201b843a0">
+        <source>The payment was accepted but the order could not be created</source>
+        <target>Le paiement a été accepté mais la commande n'a pas pu être créée</target>
+      </trans-unit>
+      <trans-unit id="bc1190e3eac8ab31603feb66aefd8392">
+        <source>The payment was refunded automatically</source>
+        <target>Le paiement a été remboursé automatiquement</target>
+      </trans-unit>
+      <trans-unit id="324fb6d04a03a8b3ef9fafc1dd4f4592">
+        <source>The reference %id% designates several variants, specify variant_id</source>
+        <target>La référence %id% désigne plusieurs déclinaisons, précisez variant_id</target>
+      </trans-unit>
+      <trans-unit id="bc06ef35d6f9c9932ef620bcceb53b4f">
+        <source>This cart has already been ordered</source>
+        <target>Ce panier a déjà donné lieu à une commande</target>
+      </trans-unit>
+      <trans-unit id="ba12e59b20a9720f70fb907a55cd2620">
+        <source>Total incl. tax</source>
+        <target>Total TTC</target>
+      </trans-unit>
+      <trans-unit id="75b9c8e6fadab29a35d04552d2933de5">
+        <source>UCP metadata: ucp-agent.profile (URL of the platform profile), idempotency-key (UUID)</source>
+        <target>Métadonnées UCP : ucp-agent.profile (URL du profil de la plateforme), idempotency-key (UUID)</target>
+      </trans-unit>
+      <trans-unit id="c2a6c0c4bcac64fd08ccb3f37249bd6d">
+        <source>UCP object, schema %schema%</source>
+        <target>Objet UCP, schéma %schema%</target>
+      </trans-unit>
+      <trans-unit id="ad44a62b7b84e69b687304808a8c9d32">
+        <source>UCP shop (Universal Commerce Protocol 2026-04-08). Every tool requires arguments.meta["ucp-agent"].profile. Variants are mandatory: if a product has some, specify the variant (otherwise variant_required). Tools that change state (create_*, update_*, cancel_*, complete_checkout) require meta["idempotency-key"]. create_cart returns a continue_url to be opened by the buyer; a checkout session whose continue_url is opened can no longer be completed through the API.</source>
+        <target>Boutique UCP (Universal Commerce Protocol 2026-04-08). Chaque outil exige arguments.meta["ucp-agent"].profile. Les déclinaisons sont obligatoires : si un produit en a, précisez la variante (sinon variant_required). Les outils qui modifient l'état (create_*, update_*, cancel_*, complete_checkout) exigent meta["idempotency-key"]. create_cart renvoie un continue_url à ouvrir par l'acheteur ; une session de caisse dont le continue_url est ouvert ne peut plus être finalisée par l'API.</target>
+      </trans-unit>
+      <trans-unit id="665e3363d321c5cd23eb0904ac4e5738">
+        <source>UCP test payment</source>
+        <target>UCP paiement de test</target>
+      </trans-unit>
+      <trans-unit id="810a7e40a1687da472fc3feaf703aa26">
+        <source>Unable to add the items</source>
+        <target>Impossible d'ajouter les articles</target>
+      </trans-unit>
+      <trans-unit id="9dfd46ea752d8574e4faf4550baff605">
+        <source>Unable to add the items to the cart</source>
+        <target>Impossible d'ajouter les articles au panier</target>
+      </trans-unit>
+      <trans-unit id="e25e7036450ca12cc31aa75bfdf0a66e">
+        <source>Uncertain charge: the merchant checks with the payment provider and refunds if a charge took place</source>
+        <target>Débit incertain : le marchand vérifie auprès du prestataire de paiement et rembourse si un débit a eu lieu</target>
+      </trans-unit>
+      <trans-unit id="334ba0dab2eaca7a6c4bb605aa4bb81d">
+        <source>Unknown code</source>
+        <target>Code inconnu</target>
+      </trans-unit>
+      <trans-unit id="0fa18018204a2d68521f74413f71b9f2">
+        <source>Unknown or disabled payment handler: %handler%</source>
+        <target>Gestionnaire de paiement inconnu ou désactivé : %handler%</target>
+      </trans-unit>
+      <trans-unit id="3e11f5eaeb89e8bd1e4256222dc0d938">
+        <source>Unknown resource: %method% /%path%</source>
+        <target>Ressource inconnue : %method% /%path%</target>
+      </trans-unit>
+      <trans-unit id="058e3be876df2d2f4deb7af780d513bb">
+        <source>Unknown shipping option: %option%</source>
+        <target>Option de livraison inconnue : %option%</target>
+      </trans-unit>
+      <trans-unit id="8d031cf96ed29894369e548e6e5bc197">
+        <source>Unknown tool: %name%</source>
+        <target>Outil inconnu : %name%</target>
+      </trans-unit>
+      <trans-unit id="a16423b16062fefa352e2b8828d941a7">
+        <source>Update in progress</source>
+        <target>Mise à jour en cours</target>
+      </trans-unit>
+      <trans-unit id="7df559b647cdfb1bb37a8d4d00af97d2">
+        <source>Updates a checkout session (buyer, address and carrier, discount codes, consents).</source>
+        <target>Met à jour une session de caisse (acheteur, adresse et transporteur, codes promo, consentements).</target>
+      </trans-unit>
+      <trans-unit id="43183e955e3019bf7f8c942e016b7b13">
+        <source>VAT</source>
+        <target>TVA</target>
+      </trans-unit>
+      <trans-unit id="6fd3fc763167a7d43eb0d5eb0155188c">
+        <source>VAT (%country%)</source>
+        <target>TVA (%country%)</target>
+      </trans-unit>
+      <trans-unit id="8617a689fd679cff88e429af84cf8c16">
+        <source>Variant %variant% unknown for %id%</source>
+        <target>Déclinaison %variant% inconnue pour %id%</target>
+      </trans-unit>
+      <trans-unit id="f10088e183aa97dc873a164db4e0c1f9">
+        <source>code disabled</source>
+        <target>code désactivé</target>
+      </trans-unit>
+      <trans-unit id="66bffe2b798e87595cefceb4c854afd3">
+        <source>code expired since %date%</source>
+        <target>code expiré depuis le %date%</target>
+      </trans-unit>
+      <trans-unit id="25a6eecd06ffe9a1daffc5d5194dc3ac">
+        <source>code reserved for an identified customer (identity linking required)</source>
+        <target>code réservé à un client identifié (identity linking requis)</target>
+      </trans-unit>
+      <trans-unit id="fb4ff0394452aa312171cb8f9b30511c">
+        <source>code reserved for another customer</source>
+        <target>code réservé à un autre client</target>
+      </trans-unit>
+      <trans-unit id="08381c923e156c0a76306e286b06885a">
+        <source>code used up</source>
+        <target>code épuisé</target>
+      </trans-unit>
+      <trans-unit id="6ebd22e55ef6bc5c9827c5935567a22e">
+        <source>code valid from %date%</source>
+        <target>code valable à partir du %date%</target>
+      </trans-unit>
+      <trans-unit id="bcdf0289c8bf75368fed41be68387e9e">
+        <source>code_verifier does not match code_challenge</source>
+        <target>code_verifier ne correspond pas au code_challenge</target>
+      </trans-unit>
+      <trans-unit id="8d1ce50e34fefdf5ddc8bd323c515973">
+        <source>code_verifier missing or malformed (PKCE required)</source>
+        <target>code_verifier absent ou mal formé (PKCE obligatoire)</target>
+      </trans-unit>
+      <trans-unit id="d4e5d5509c0ef1587e4d944ff024936c">
+        <source>id missing or invalid</source>
+        <target>id absent ou invalide</target>
+      </trans-unit>
+      <trans-unit id="d2bcf93c985a6dcb1ac1d99508822b5c">
+        <source>line_items is required and cannot be empty</source>
+        <target>line_items est requis et ne peut pas être vide</target>
+      </trans-unit>
+      <trans-unit id="aa9acc8542c49d78152dd3dc12726cad">
+        <source>meta["idempotency-key"] is required for %name%</source>
+        <target>meta["idempotency-key"] est obligatoire pour %name%</target>
+      </trans-unit>
+      <trans-unit id="6e982c8a4ed66fb0821d2548b87861bc">
+        <source>meta["ucp-agent"].profile is required</source>
+        <target>meta["ucp-agent"].profile est obligatoire</target>
+      </trans-unit>
+      <trans-unit id="c0e0fd67efa7c7983411316134f5451b">
+        <source>redirect_uri different from the authorization request</source>
+        <target>redirect_uri différent de la demande d'autorisation</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

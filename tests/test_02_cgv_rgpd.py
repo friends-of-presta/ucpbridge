@@ -11,7 +11,7 @@ import uuid
 
 import pytest
 
-from conftest import (BANC, BASE, BUYER, DEST_FR, M_BLANC, admin_dir, admin_login, appel, id_commande, attendre_mails, config, mail, php,
+from conftest import (BANC, BASE, BUYER, DEST_FR, MAILPIT, M_BLANC, admin_dir, admin_login, appel, id_commande, attendre_mails, config, mail, php,
                       set_config, sql, sql_val, total)
 
 TYPES = ["terms_of_service", "privacy_policy", "refund_policy", "shipping_policy"]
@@ -82,7 +82,7 @@ def test_mention_retractation_ue(boutique):
     d = disclosures(s)
     assert len(d) == 1
     assert d[0]["type"] == "warning" and d[0]["code"] == "withdrawal_right"
-    assert "14 jours" in d[0]["content"] and "rétractation en ligne" in d[0]["content"]
+    assert d[0]["content"] and d[0]["presentation"] == "disclosure" and d[0]["url"]
     p = boutique.post("/carts", {"line_items": [{"item": M_BLANC, "quantity": 1}]}).doc
     assert len(disclosures(p)) == 1  # pays de la boutique (FR) tant qu'aucune adresse n'est connue
 
@@ -149,7 +149,7 @@ def test_journal_de_preuve(boutique):
     assert json.loads(disc)[0]["code"] == "withdrawal_right"
     assert [t["amount"] for t in json.loads(totaux) if t["type"] == "total"][0] == total(s)
     html = php(f"echo Module::getInstanceByName('ucpbridge')->hookDisplayAdminOrderMain(['id_order' => {oid}]);")
-    assert "Preuve UCP" in html and version in html and "agent.contrib.test" in html
+    assert 'id="ucpbridge-proof"' in html and version in html and "agent.contrib.test" in html
     assert "<script" not in html
 
 
@@ -166,7 +166,7 @@ def test_journal_visible_sur_la_fiche_commande(boutique):
         page.goto(f"{BASE}/{lien.split('/index.php')[0].strip('/').split('/')[-1]}/index.php/sell/orders/{oid}/view?_token={jeton}")
         bloc = page.locator("#ucpbridge-proof")
         bloc.wait_for(timeout=15000)
-        assert "Preuve UCP" in bloc.inner_text()
+        assert bloc.get_attribute("data-ucp-withdrawal") == "none"
         bloc.scroll_into_view_if_needed()
         bloc.screenshot(path=os.path.join(BANC, "capture-preuve-commande.png"))
         nav.close()
@@ -200,19 +200,20 @@ def test_relecture_des_cgv_chez_le_marchand(boutique, relecture):
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1000, "height": 1300})
-        page.goto(url.replace("sig=", "sig=0"))
-        assert "invalide" in page.inner_text("body").lower()
+        r = page.goto(url.replace("sig=", "sig=0"))
+        assert r.status == 403 and page.get_attribute("main", "data-ucp-page") == "invalid-link"
         page.goto(url)
         corps = page.inner_text("body")
-        assert "colibri" in corps.lower() and "Conditions d'utilisation" in corps
-        assert "J'ai lu et j'accepte les CGV" in corps
+        assert page.get_attribute("main", "data-ucp-page") == "terms-review"
+        assert "colibri" in corps.lower() and "Conditions d'utilisation" in corps  # titre de la page CMS de la boutique
+        assert page.locator("input[type=checkbox][name=accept_terms]").count() == 1
         page.click("button[type=submit]")  # sans cocher : refusé
-        assert "cocher" in page.inner_text("body").lower()
+        assert page.get_attribute("main", "data-ucp-page") == "terms-review" and page.locator("p.err").count() == 1
         page.goto(url)
         page.check("input[name=accept_terms]")
         page.screenshot(path=os.path.join(BANC, "capture-acceptation-cgv.png"), full_page=True)
         page.click("button[type=submit]")
-        assert "enregistrée" in page.inner_text("body").lower()
+        assert page.get_attribute("main", "data-ucp-page") == "terms-accepted"
         nav.close()
 
     s = boutique.get(f"/checkout-sessions/{s['id']}").doc
@@ -227,7 +228,7 @@ def test_formulaire_cgv_protege_contre_csrf(boutique, relecture):
     s = boutique.session_prete(buyer=acheteur())
     url = s["continue_url"]
     r = appel("POST", url, form={"accept_terms": "1", "csrf": "faux"})
-    assert "enregistrée" not in r.texte.lower()
+    assert 'data-ucp-page="terms-accepted"' not in r.texte
     assert boutique.get(f"/checkout-sessions/{s['id']}").doc["status"] == "requires_escalation"
 
 
@@ -239,39 +240,39 @@ def test_email_de_confirmation_et_retractation(boutique):
     s, fin = commander(boutique, b)
     oid = id_commande(fin["order"]["id"])
     msgs = attendre_mails(b["email"])
-    conf = [m for m in msgs if "confirm" in m["Subject"].lower() or "commande" in m["Subject"].lower()]
+    # E-mail de confirmation : celui qui porte le bloc légal du module (lien de rétractation signé).
+    retrait = re.compile(r'href="([^"]*controller=withdraw[^"]*|[^"]*/withdraw\?[^"]*)"')
+    conf = [m for m in msgs if retrait.search(mail(m["ID"])["HTML"])]
     assert conf, [m["Subject"] for m in msgs]
-    detail = mail(conf[0]["ID"])
-    html = detail["HTML"]
-    assert "Conditions d'utilisation" in html or "Conditions d&#039;utilisation" in html
-    lien = re.search(r'href="([^"]*controller=withdraw[^"]*|[^"]*/withdraw\?[^"]*)"', html)
-    assert lien, "lien de rétractation absent de l'e-mail"
-    url = lien.group(1).replace("&amp;", "&")
-    assert "Se rétracter" in html or "rétractation" in html.lower()
+    html = mail(conf[0]["ID"])["HTML"]
+    assert "Conditions d'utilisation" in html or "Conditions d&#039;utilisation" in html  # titre de la page CMS
+    url = retrait.search(html).group(1).replace("&amp;", "&")
 
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1200, "height": 1000})
-        page.goto(f"http://localhost:8025/view/{conf[0]['ID']}.html")
+        page.goto(f"{MAILPIT}/view/{conf[0]['ID']}.html")
         page.wait_for_load_state("networkidle")
         page.screenshot(path=os.path.join(BANC, "capture-mail-confirmation.png"), full_page=True)
-        page.get_by_text("Informations légales").scroll_into_view_if_needed()
-        page.locator("table:has-text('Informations légales')").last.screenshot(path=os.path.join(BANC, "capture-mail-bloc-legal.png"))
-        page.goto(url.replace("sig=", "sig=0"))
-        assert "invalide" in page.inner_text("body").lower()
+        bloc = page.locator("table:has(a[href*='withdraw'])").last
+        bloc.scroll_into_view_if_needed()
+        bloc.screenshot(path=os.path.join(BANC, "capture-mail-bloc-legal.png"))
+        r = page.goto(url.replace("sig=", "sig=0"))
+        assert r.status == 403 and page.get_attribute("main", "data-ucp-page") == "invalid-link"
         page.goto(url)
-        assert "Se rétracter de cette commande" in page.inner_text("body")
+        assert page.get_attribute("main", "data-ucp-page") == "withdrawal-form"
         page.screenshot(path=os.path.join(BANC, "capture-retractation.png"), full_page=True)
         page.click("button[type=submit]")
-        corps = page.inner_text("body").lower()
-        assert "enregistrée" in corps and "accusé de réception" in corps
+        assert page.get_attribute("main", "data-ucp-page") == "withdrawal-recorded" and b["email"] in page.inner_text("body")
         page.screenshot(path=os.path.join(BANC, "capture-retractation-accusee.png"), full_page=True)
         page.goto(url)  # deuxième visite : déjà enregistrée, pas de doublon
-        assert "déjà" in page.inner_text("body").lower()
+        assert page.get_attribute("main", "data-ucp-page") == "withdrawal-already-recorded"
         nav.close()
     assert sql_val(f"SELECT COUNT(*) FROM ps_ucpbridge_withdrawal WHERE id_order={oid}") == "1"
     accuses = attendre_mails(b["email"], n=len(msgs) + 1)
-    assert any("rétractation" in m["Subject"].lower() for m in accuses), [m["Subject"] for m in accuses]
+    nouveaux = [m for m in accuses if m["ID"] not in {x["ID"] for x in msgs}]
+    ref = sql_val(f"SELECT reference FROM ps_orders WHERE id_order={oid}")
+    assert len(nouveaux) == 1 and ref in mail(nouveaux[0]["ID"])["Text"], [m["Subject"] for m in accuses]
 
 
 def test_formulaire_retractation_protege_contre_csrf(boutique):

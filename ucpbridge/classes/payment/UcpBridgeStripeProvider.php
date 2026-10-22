@@ -104,7 +104,7 @@ class UcpBridgeStripeProvider implements UcpBridgePaymentProvider
     public function charge(array $credential, $amount, $currency, array $context)
     {
         if (!$this->isTestMode()) {
-            return UcpBridgePaymentResult::fail('Google Pay désactivé : clé Stripe de test absente');
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Google Pay disabled: Stripe test key missing'));
         }
         if ('PAYMENT_GATEWAY' !== ($credential['type'] ?? '')) {
             return UcpBridgePaymentResult::fail('credential.type PAYMENT_GATEWAY attendu pour com.google.pay');
@@ -126,17 +126,17 @@ class UcpBridgeStripeProvider implements UcpBridgePaymentProvider
             // Détail technique (hôte, erreur réseau) au journal de la boutique, message générique à l'agent.
             PrestaShopLogger::addLog('ucpbridge Stripe injoignable : ' . $err, 3);
             if (self::neverSent($errno)) {
-                return UcpBridgePaymentResult::fail('Passerelle de paiement injoignable, réessayer plus tard');
+                return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Payment gateway unreachable, try again later'));
             }
 
             // Requête peut-être reçue par Stripe (délai dépassé, connexion coupée) : débit possible.
-            return UcpBridgePaymentResult::unknown('Réponse de la passerelle de paiement perdue : débit à vérifier');
+            return UcpBridgePaymentResult::unknown(UcpBridgeI18n::api('Payment gateway response lost: charge to be checked'));
         }
         if ($code >= 500 && 'charge' !== ($doc['object'] ?? '')) {
             // Erreur serveur Stripe : le débit a pu avoir lieu (https://docs.stripe.com/error-low-level#server-errors).
             PrestaShopLogger::addLog('ucpbridge Stripe erreur ' . $code . ' sans charge : ' . (string) ($doc['error']['message'] ?? ''), 3);
 
-            return UcpBridgePaymentResult::unknown('Erreur de la passerelle de paiement (HTTP ' . $code . ') : débit à vérifier', $doc);
+            return UcpBridgePaymentResult::unknown(UcpBridgeI18n::api('Payment gateway error (HTTP %code%): charge to be checked', ['%code%' => $code]), $doc);
         }
         if (isset($doc['error'])) {
             $e = $doc['error'];
@@ -145,23 +145,23 @@ class UcpBridgeStripeProvider implements UcpBridgePaymentProvider
                 return UcpBridgePaymentResult::action((string) ($e['charge'] ?? ''), (string) ($context['continue_url'] ?? ''), $doc);
             }
 
-            return UcpBridgePaymentResult::fail('Paiement refusé : ' . (string) ($e['message'] ?? 'erreur Stripe'), $doc);
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Payment refused: %reason%', ['%reason%' => (string) ($e['message'] ?? UcpBridgeI18n::api('Stripe error'))]), $doc);
         }
         if ($code >= 300 || 'charge' !== ($doc['object'] ?? '') || 'succeeded' !== ($doc['status'] ?? '') || empty($doc['paid'])) {
-            return UcpBridgePaymentResult::fail('Paiement non confirmé par la passerelle (statut ' . ($doc['status'] ?? $code) . ')', (array) $doc);
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Payment not confirmed by the gateway (status %status%)', ['%status%' => $doc['status'] ?? $code]), (array) $doc);
         }
         if ((int) $doc['amount'] !== (int) $amount) {
-            return UcpBridgePaymentResult::fail('Montant débité incohérent', $doc);
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Inconsistent charged amount'), $doc);
         }
 
-        return UcpBridgePaymentResult::ok((string) $doc['id'], 'Google Pay (test)', $doc);
+        return UcpBridgePaymentResult::ok((string) $doc['id'], UcpBridgeI18n::api('Google Pay (test)'), $doc);
     }
 
     /** Remboursement par l'API Refunds (charge = référence ch_...), Idempotency-Key liée au débit. */
     public function refund($transactionId, $amount, $currency, array $context)
     {
         if (!$this->isTestMode()) {
-            return UcpBridgePaymentResult::fail('Clé Stripe de test absente : remboursement à faire dans le tableau de bord Stripe');
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Stripe test key missing: refund to be made in the Stripe dashboard'));
         }
         list($code, $doc, $err) = $this->post('/v1/refunds', ['charge' => (string) $transactionId, 'amount' => (int) $amount,
             'metadata[ucp_session]' => (string) ($context['session_id'] ?? '')], 'ucpbridge-refund-' . $transactionId);
@@ -171,10 +171,10 @@ class UcpBridgeStripeProvider implements UcpBridgePaymentProvider
             return UcpBridgePaymentResult::fail('Passerelle de paiement injoignable');
         }
         if ($code >= 300 || 'refund' !== ($doc['object'] ?? '') || !in_array($doc['status'] ?? '', ['succeeded', 'pending'], true)) {
-            return UcpBridgePaymentResult::fail('Remboursement refusé : ' . (string) ($doc['error']['message'] ?? ($doc['status'] ?? $code)), (array) $doc);
+            return UcpBridgePaymentResult::fail(UcpBridgeI18n::api('Refund refused: %reason%', ['%reason%' => (string) ($doc['error']['message'] ?? ($doc['status'] ?? $code))]), (array) $doc);
         }
 
-        return UcpBridgePaymentResult::ok((string) $doc['id'], 'Remboursement Stripe', $doc);
+        return UcpBridgePaymentResult::ok((string) $doc['id'], UcpBridgeI18n::api('Stripe refund'), $doc);
     }
 
     /**

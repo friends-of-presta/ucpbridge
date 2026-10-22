@@ -19,17 +19,17 @@ class UcpbridgeHandoffModuleFrontController extends ModuleFrontController
     {
         $idCart = (int) Tools::getValue('cart');
         if (!$idCart || !$this->module->checkSigned('handoff', ['cart'])) {
-            $this->refuse('Lien de panier invalide ou expiré.');
+            $this->refuse(UcpBridgeI18n::shop('Invalid or expired cart link.'));
         }
         $cart = new Cart($idCart);
         if (!Validate::isLoadedObject($cart) || (int) $cart->id_shop !== (int) $this->context->shop->id || $cart->orderExists()) {
-            $this->refuse('Ce panier n\'est plus disponible.');
+            $this->refuse(UcpBridgeI18n::shop('This cart is no longer available.'));
         }
         // Un panier rattaché à un client connu ne se rouvre que pour ce client.
         if ($cart->id_customer) {
             $owner = new Customer((int) $cart->id_customer);
             if (!$owner->is_guest && (int) $this->context->customer->id !== (int) $owner->id) {
-                $this->refuse('Connectez-vous pour retrouver ce panier.');
+                $this->refuse(UcpBridgeI18n::shop('Log in to find this cart again.'));
             }
         }
 
@@ -44,9 +44,9 @@ class UcpbridgeHandoffModuleFrontController extends ModuleFrontController
         $busy = (string) Db::getInstance()->getValue('SELECT status FROM ' . $t . ' WHERE id_cart = ' . (int) $cart->id
             . ' AND status IN (\'complete_in_progress\', \'reconciling\', \'completed\', \'updating\') ORDER BY status = \'updating\' DESC');
         if ('updating' === $busy) {
-            $this->refuse('Votre assistant modifie ce panier : réessayez dans quelques secondes.');
+            $this->refuse(UcpBridgeI18n::shop('Your assistant is modifying this cart: try again in a few seconds.'));
         } elseif ('' !== $busy) {
-            $this->refuse('Cette commande est en cours de finalisation par votre assistant.');
+            $this->refuse(UcpBridgeI18n::shop('This order is being completed by your assistant.'));
         }
 
         $cart->id_guest = (int) $this->context->cookie->id_guest;

@@ -27,8 +27,8 @@ class UcpBridgeOAuth
     public static function scopes()
     {
         return [
-            self::SCOPE_CHECKOUT => 'Créer et finaliser des commandes en votre nom, avec votre adresse enregistrée',
-            self::SCOPE_ORDER => 'Consulter les commandes passées par cet assistant',
+            self::SCOPE_CHECKOUT => UcpBridgeI18n::shop('Create and complete orders on your behalf, with your saved address'),
+            self::SCOPE_ORDER => UcpBridgeI18n::shop('View the orders placed by this assistant'),
         ];
     }
 
@@ -176,13 +176,13 @@ class UcpBridgeOAuth
         $hash = self::h($code);
         $row = Db::getInstance()->getRow('SELECT * FROM `' . _DB_PREFIX_ . 'ucpbridge_oauth_code` WHERE code_hash = \'' . pSQL($hash) . '\'');
         if (!$row) {
-            return ['invalid_grant', 'Code inconnu'];
+            return ['invalid_grant', UcpBridgeI18n::api('Unknown code')];
         }
         // Client vérifié AVANT toute consommation : un autre client enregistré qui détient le code (fuite par un journal,
         // un en-tête Referer...) ne peut ni le brûler ni déclencher la révocation des jetons de son propriétaire.
         // Même réponse qu'un code inconnu : rien n'indique à ce client que le code existe.
         if (!hash_equals((string) $row['client_id'], (string) $client['client_id'])) {
-            return ['invalid_grant', 'Code inconnu'];
+            return ['invalid_grant', UcpBridgeI18n::api('Unknown code')];
         }
         // Consommation atomique : un code rejoué ne passe jamais deux fois.
         Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'ucpbridge_oauth_code` SET used = 1 WHERE code_hash = \'' . pSQL($hash) . '\' AND used = 0');
@@ -190,19 +190,19 @@ class UcpBridgeOAuth
             // RFC 6749 §4.1.2 : code rejoué, on révoque les jetons déjà émis pour ce client et ce client final.
             self::revokeAllFor($row['client_id'], (int) $row['id_customer']);
 
-            return ['invalid_grant', 'Code déjà utilisé'];
+            return ['invalid_grant', UcpBridgeI18n::api('Code already used')];
         }
         if (strtotime($row['expires_at']) < time()) {
-            return ['invalid_grant', 'Code expiré'];
+            return ['invalid_grant', UcpBridgeI18n::api('Code expired')];
         }
         if ($row['redirect_uri'] !== (string) $redirectUri) {
-            return ['invalid_grant', 'redirect_uri différent de la demande d\'autorisation'];
+            return ['invalid_grant', UcpBridgeI18n::api('redirect_uri different from the authorization request')];
         }
         if (!UcpBridgePkce::isValidVerifier($verifier)) {
-            return ['invalid_grant', 'code_verifier absent ou mal formé (PKCE obligatoire)'];
+            return ['invalid_grant', UcpBridgeI18n::api('code_verifier missing or malformed (PKCE required)')];
         }
         if (!UcpBridgePkce::verify($verifier, $row['code_challenge'])) {
-            return ['invalid_grant', 'code_verifier ne correspond pas au code_challenge'];
+            return ['invalid_grant', UcpBridgeI18n::api('code_verifier does not match code_challenge')];
         }
 
         return self::issueTokens($client['client_id'], (int) $row['id_customer'], $row['scope'], (int) $row['issued_us']);
@@ -240,7 +240,7 @@ class UcpBridgeOAuth
             self::revokeHash(self::h($access));
             self::revokeHash(self::h($refresh));
 
-            return ['invalid_grant', 'Accès révoqué par le client ou le marchand'];
+            return ['invalid_grant', UcpBridgeI18n::api('Access revoked by the customer or the merchant')];
         }
 
         return [null, [
@@ -291,13 +291,13 @@ class UcpBridgeOAuth
     {
         $row = self::find($refreshToken, 'refresh');
         if (!$row || $row['client_id'] !== $client['client_id']) {
-            return ['invalid_grant', 'Jeton de rafraîchissement invalide'];
+            return ['invalid_grant', UcpBridgeI18n::api('Invalid refresh token')];
         }
         $db = Db::getInstance();
         $db->execute('UPDATE `' . _DB_PREFIX_ . 'ucpbridge_oauth_token` SET revoked = 1
             WHERE token_hash = \'' . pSQL($row['token_hash']) . '\' AND kind = \'refresh\' AND revoked = 0');
         if (1 !== (int) $db->Affected_Rows()) {
-            return ['invalid_grant', 'Jeton de rafraîchissement déjà utilisé ou révoqué'];
+            return ['invalid_grant', UcpBridgeI18n::api('Refresh token already used or revoked')];
         }
 
         return self::issueTokens($client['client_id'], (int) $row['id_customer'], $row['scope'], (int) $row['issued_us']);

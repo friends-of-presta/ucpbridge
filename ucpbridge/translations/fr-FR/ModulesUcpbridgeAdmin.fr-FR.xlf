@@ -1,0 +1,644 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE. -->
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="ucpbridge" source-language="en-US" target-language="fr-FR" datatype="plaintext">
+    <body>
+      <trans-unit id="735129e71fb4142e0794b6621412c459">
+        <source>%category%: %days% days, legal minimum %min% days</source>
+        <target>%category% : %days% jours, minimum légal %min% jours</target>
+      </trans-unit>
+      <trans-unit id="bbaea321d0438178ffcd0ec62f63d3c9">
+        <source>%count% session(s) processed, threshold %minutes% minute(s)</source>
+        <target>%count% session(s) traitée(s), seuil %minutes% minute(s)</target>
+      </trans-unit>
+      <trans-unit id="69c9c01cfae478ebb7dfb1821aed15bb">
+        <source>%days% d</source>
+        <target>%days% j</target>
+      </trans-unit>
+      <trans-unit id="c4cdddc44c30923223e0b3d131ff91b6">
+        <source>%name%: registration of payment adapters</source>
+        <target>%name% : inscription des adaptateurs de paiement</target>
+      </trans-unit>
+      <trans-unit id="d0d0067943e07171921808e522974971">
+        <source>%proofs% order evidence record(s), %withdrawals% withdrawal request(s). Kept on uninstallation (with the payment log) and found again on reinstallation, unless chosen otherwise in the Uninstallation section.</source>
+        <target>%proofs% preuve(s) de commande, %withdrawals% demande(s) de rétractation. Conservés à la désinstallation (avec le journal des paiements) et retrouvés à la réinstallation, sauf choix contraire dans la section Désinstallation.</target>
+      </trans-unit>
+      <trans-unit id="97de28e99fc5b88d55fb8f6f62cccf5f">
+        <source>%title% (inactive)</source>
+        <target>%title% (inactive)</target>
+      </trans-unit>
+      <trans-unit id="97139627c126d86a74d8ab820ad756d6">
+        <source>(none)</source>
+        <target>(aucune)</target>
+      </trans-unit>
+      <trans-unit id="4959301211ceff4479065b0d07433090">
+        <source>(not sent)</source>
+        <target>(non transmis)</target>
+      </trans-unit>
+      <trans-unit id="e9d59fe1fab4c159b4f33781086daa46">
+        <source>--dry-run for a simulation</source>
+        <target>--dry-run pour une simulation</target>
+      </trans-unit>
+      <trans-unit id="b88047b0bef67f10f2b815e2338531a6">
+        <source>A session without acceptance goes to requires_buyer_review (signed page with a checkbox).</source>
+        <target>Une session sans acceptation passe en requires_buyer_review (page signée avec case à cocher).</target>
+      </trans-unit>
+      <trans-unit id="bfa95c82191f70541301e028900c81f3">
+        <source>API call that completed the order</source>
+        <target>Appel API qui a finalisé</target>
+      </trans-unit>
+      <trans-unit id="656a6828d7ef1bb791e42087c4b5ee6e">
+        <source>API key</source>
+        <target>Clé API</target>
+      </trans-unit>
+      <trans-unit id="8d25a18f0ba8dac424dde014faf5dfaa">
+        <source>Access revoked.</source>
+        <target>Accès révoqué.</target>
+      </trans-unit>
+      <trans-unit id="4f428b8b8f934cd6488285d5435ed942">
+        <source>Active agent access</source>
+        <target>Accès agents actifs</target>
+      </trans-unit>
+      <trans-unit id="99b236707ea5474a684060ffdab50a45">
+        <source>Add a platform</source>
+        <target>Ajouter une plateforme</target>
+      </trans-unit>
+      <trans-unit id="d0b35a6180f495ba6bd4d749e44353d4">
+        <source>Addresses without a customer deleted</source>
+        <target>Adresses sans client supprimées</target>
+      </trans-unit>
+      <trans-unit id="6c072968bb6d73a019f2ec2e6602a0d8">
+        <source>Addresses without a customer to delete</source>
+        <target>Adresses sans client à supprimer</target>
+      </trans-unit>
+      <trans-unit id="030288e4e4bf2b034b02f3fe13e3d9fa">
+        <source>Agent (UCP-Agent)</source>
+        <target>Agent (UCP-Agent)</target>
+      </trans-unit>
+      <trans-unit id="4314939000f087bdef27d75ad12b074c">
+        <source>Also delete the evidence log, the withdrawal requests and the payment log on the next uninstallation (irreversible: export first). No: this data is kept and found again on reinstallation.</source>
+        <target>Supprimer aussi le journal de preuve, les demandes de rétractation et le journal des paiements à la prochaine désinstallation (irréversible : exporter d'abord). Non : ces données sont conservées et retrouvées à la réinstallation.</target>
+      </trans-unit>
+      <trans-unit id="9b1363da9503dbd4142c0274a88e8d4b">
+        <source>Assistant</source>
+        <target>Assistant</target>
+      </trans-unit>
+      <trans-unit id="c2b7b3acf81beb0b6d5e63fe238f2dad">
+        <source>Checkout session</source>
+        <target>Session de caisse</target>
+      </trans-unit>
+      <trans-unit id="c6d13551369198f891ca2dd0b784c003">
+        <source>Checkout sessions and carts completed or expired</source>
+        <target>Sessions de caisse et paniers terminés ou expirés</target>
+      </trans-unit>
+      <trans-unit id="558b49eb972c3c62a1a4e5b6d91420ae">
+        <source>Configuration saved.</source>
+        <target>Configuration enregistrée.</target>
+      </trans-unit>
+      <trans-unit id="05645382e1cbd9c85b056bcd899b5bb0">
+        <source>Consents (buyer_consent)</source>
+        <target>Consentements (buyer_consent)</target>
+      </trans-unit>
+      <trans-unit id="f7f19392da30e81c3abf433ce7b8ca38">
+        <source>Created on</source>
+        <target>Créée le</target>
+      </trans-unit>
+      <trans-unit id="ce26601dac0dea138b7295f02b7620a7">
+        <source>Customer</source>
+        <target>Client</target>
+      </trans-unit>
+      <trans-unit id="44749712dbec183e983dcd78a7736c41">
+        <source>Date</source>
+        <target>Date</target>
+      </trans-unit>
+      <trans-unit id="7ed52c8bbd96c1a137545cc23dfcc617">
+        <source>Default %default%, 0 = never purged, %max% at most.</source>
+        <target>Défaut %default%, 0 = jamais purgé, %max% au plus.</target>
+      </trans-unit>
+      <trans-unit id="ab561aa898fef7491b432bef72d87438">
+        <source>Default %default%, legal minimum %min%, 0 = never purged, %max% at most.</source>
+        <target>Défaut %default%, minimum légal %min%, 0 = jamais purgé, %max% au plus.</target>
+      </trans-unit>
+      <trans-unit id="1261cee50e33813c3b9d3479a1abc39b">
+        <source>Default platform</source>
+        <target>Plateforme par défaut</target>
+      </trans-unit>
+      <trans-unit id="f2a6c498fb90ee345d997f888fce3b18">
+        <source>Delete</source>
+        <target>Supprimer</target>
+      </trans-unit>
+      <trans-unit id="3e45a4d06620c82242273cbc0bbd8c0c">
+        <source>Delete the evidence on uninstallation</source>
+        <target>Supprimer les preuves à la désinstallation</target>
+      </trans-unit>
+      <trans-unit id="8be9a22c2027541b3864470f12c3037b">
+        <source>Delete the key of this platform?</source>
+        <target>Supprimer la clé de cette plateforme ?</target>
+      </trans-unit>
+      <trans-unit id="23cc75d3feb37c98803e06d9c06ffbf2">
+        <source>Demonstration prototype: do not use in production.</source>
+        <target>Prototype de démonstration : ne pas utiliser en production.</target>
+      </trans-unit>
+      <trans-unit id="64338fe6a2a705700f971f0c9787d211">
+        <source>Disclosures</source>
+        <target>Mentions</target>
+      </trans-unit>
+      <trans-unit id="bc9e270b7b1a09eeac794d32b3d9dc8f">
+        <source>Display name</source>
+        <target>Nom affiché</target>
+      </trans-unit>
+      <trans-unit id="afe5abb9b638e56f82eef6aff61024c6">
+        <source>Empty: test payment disabled.</source>
+        <target>Vide : paiement de test désactivé.</target>
+      </trans-unit>
+      <trans-unit id="752cd75f50be9e4fa5d75a1f1736b772">
+        <source>Evidence log and withdrawal requests</source>
+        <target>Journal de preuve et demandes de rétractation</target>
+      </trans-unit>
+      <trans-unit id="e0d8796a73c64c743177ea6dee7c96fd">
+        <source>Evidence log and withdrawals</source>
+        <target>Journal de preuve et rétractations</target>
+      </trans-unit>
+      <trans-unit id="31a0efb83db6407e50168d93dcf19525">
+        <source>Expired or revoked OAuth codes and tokens</source>
+        <target>Codes et jetons OAuth expirés ou révoqués</target>
+      </trans-unit>
+      <trans-unit id="fa1047618074506a57e4777948ed16ad">
+        <source>Export the evidence and withdrawals (CSV)</source>
+        <target>Exporter les preuves et rétractations (CSV)</target>
+      </trans-unit>
+      <trans-unit id="7fac6db332cf5e05d057ba65e0686bd0">
+        <source>Google Pay (com.google.pay, Stripe gateway, TEST environment)</source>
+        <target>Google Pay (com.google.pay, passerelle Stripe, environnement TEST)</target>
+      </trans-unit>
+      <trans-unit id="0b121071ca06f78ec54ed14ef38da205">
+        <source>Guest customers created by the module, without an order</source>
+        <target>Clients invités créés par le module, sans commande</target>
+      </trans-unit>
+      <trans-unit id="20f9a8c9e8664b6d9356020a7619656c">
+        <source>Guest customers without an order deleted</source>
+        <target>Clients invités sans commande supprimés</target>
+      </trans-unit>
+      <trans-unit id="dd3337f55229d0714181ac81d2e6ec43">
+        <source>Guest customers without an order to delete</source>
+        <target>Clients invités sans commande à supprimer</target>
+      </trans-unit>
+      <trans-unit id="e8c76c21b002f5f2c6c3cabfb1601db2">
+        <source>Idempotency keys older than 24 h deleted</source>
+        <target>Clés d'idempotence de plus de 24 h supprimées</target>
+      </trans-unit>
+      <trans-unit id="9fbe9291589aac5c75aab23fce4fb89f">
+        <source>Idempotency keys older than 24 h to delete</source>
+        <target>Clés d'idempotence de plus de 24 h à supprimer</target>
+      </trans-unit>
+      <trans-unit id="29ee5d1ebcc033234938a5234f1f2075">
+        <source>Identifier</source>
+        <target>Identifiant</target>
+      </trans-unit>
+      <trans-unit id="c61bbf5826445d358b536ee9d61ac842">
+        <source>Invalid or already used platform identifier (lowercase letters, digits, - and _, 32 characters at most).</source>
+        <target>Identifiant de plateforme invalide ou déjà utilisé (minuscules, chiffres, - et _, 32 caractères au plus).</target>
+      </trans-unit>
+      <trans-unit id="7fd081568b8948d63cf94a820e3688a7">
+        <source>Invalid retention period (%category%): a whole number of days, from 0 to %max%. No period changed.</source>
+        <target>Durée de conservation invalide (%category%) : un nombre entier de jours, de 0 à %max%. Aucune durée modifiée.</target>
+      </trans-unit>
+      <trans-unit id="ebfa87f60e99794f5994582c144517b1">
+        <source>Invalid security token: API keys unchanged.</source>
+        <target>Jeton de sécurité invalide : clés API inchangées.</target>
+      </trans-unit>
+      <trans-unit id="2df2f0423c72dfa117deff7215bed277">
+        <source>Invalid security token: access not revoked.</source>
+        <target>Jeton de sécurité invalide : révocation non effectuée.</target>
+      </trans-unit>
+      <trans-unit id="e3d313ca92353bbd53551ad58016e1ee">
+        <source>Invalid security token: configuration not saved.</source>
+        <target>Jeton de sécurité invalide : configuration non enregistrée.</target>
+      </trans-unit>
+      <trans-unit id="147dde298f668b81ed89176616ffa6bb">
+        <source>Invalid security token: export not performed.</source>
+        <target>Jeton de sécurité invalide : export non effectué.</target>
+      </trans-unit>
+      <trans-unit id="ef4e2a7826ccbc79c0078981b00f9d8e">
+        <source>Invalid security token: nothing changed.</source>
+        <target>Jeton de sécurité invalide : aucune modification.</target>
+      </trans-unit>
+      <trans-unit id="4bfe7d3b0ecad01c33e9eaae52400920">
+        <source>Invalid security token: reconciliation not performed.</source>
+        <target>Jeton de sécurité invalide : rapprochement non effectué.</target>
+      </trans-unit>
+      <trans-unit id="b8d246eca1f9f2781e8283a0b3dfc630">
+        <source>Key of platform "%id%" deleted: it is refused from now on.</source>
+        <target>Clé de la plateforme « %id% » supprimée : elle est refusée dès maintenant.</target>
+      </trans-unit>
+      <trans-unit id="8fdeefe2c8976f8e2c199b02f7d7fea1">
+        <source>Key of platform "%id%": %key% (to be given to this platform only)</source>
+        <target>Clé de la plateforme « %id% » : %key% (à transmettre à cette plateforme seulement)</target>
+      </trans-unit>
+      <trans-unit id="983a6ec9bc532026493599fae9985691">
+        <source>Legal links</source>
+        <target>Liens légaux</target>
+      </trans-unit>
+      <trans-unit id="0a753106ba877dcf49488a2c2c8aa43c">
+        <source>Legal links (links) and terms of sale</source>
+        <target>Liens légaux (links) et CGV</target>
+      </trans-unit>
+      <trans-unit id="875e20d0f40a34df4ad2ff56a7ca096e">
+        <source>Linked on</source>
+        <target>Relié le</target>
+      </trans-unit>
+      <trans-unit id="0700256db2bd75c05e4d44d0a21b4837">
+        <source>Lowercase letters, digits, - and _, 32 characters at most (e.g. google).</source>
+        <target>Minuscules, chiffres, - et _, 32 caractères au plus (ex. google).</target>
+      </trans-unit>
+      <trans-unit id="71fb5d6ae2390f6d0ad188c2c0b84d86">
+        <source>MCP:</source>
+        <target>MCP :</target>
+      </trans-unit>
+      <trans-unit id="367e95784543f9a1bd40a421bce748d2">
+        <source>Never touched: placed orders, their customers (guests included) and their addresses; sessions being completed. A session completed by an order is kept without the personal data of the buyer. Only guest customers created by the module and without any order are deleted.</source>
+        <target>Jamais touchés : les commandes passées, leurs clients (y compris invités) et leurs adresses ; les sessions en cours de finalisation. Une session terminée par une commande est conservée sans les données personnelles de l'acheteur. Seuls les clients invités créés par le module et sans aucune commande sont supprimés.</target>
+      </trans-unit>
+      <trans-unit id="bafd7322c6e97d25b6299b5d6fe8920b">
+        <source>No</source>
+        <target>Non</target>
+      </trans-unit>
+      <trans-unit id="83674f5714dad20fda6e1acb74a550ff">
+        <source>No assistant linked to a customer account.</source>
+        <target>Aucun assistant relié à un compte client.</target>
+      </trans-unit>
+      <trans-unit id="6737c3cb351d66bce9a91e7736fc369f">
+        <source>No key: guest mode is closed.</source>
+        <target>Aucune clé : le mode invité est fermé.</target>
+      </trans-unit>
+      <trans-unit id="7d539f2b157e25c60b20122595ee48ce">
+        <source>OAuth codes deleted</source>
+        <target>Codes OAuth supprimés</target>
+      </trans-unit>
+      <trans-unit id="0b87d629b1cbb8b52bd26feced583f8e">
+        <source>OAuth codes to delete</source>
+        <target>Codes OAuth à supprimer</target>
+      </trans-unit>
+      <trans-unit id="2dac15002fb79fad57a44ec13f710da4">
+        <source>OAuth tokens deleted</source>
+        <target>Jetons OAuth supprimés</target>
+      </trans-unit>
+      <trans-unit id="93b39aa4c2da0282adb41522417abf3c">
+        <source>OAuth tokens to delete</source>
+        <target>Jetons OAuth à supprimer</target>
+      </trans-unit>
+      <trans-unit id="eb74a344f8039fa7077ced46307ae9aa">
+        <source>One key per platform: each platform only sees its own carts, checkout sessions and orders, and its idempotency keys never mix with those of the others. Never give the same key to two platforms.</source>
+        <target>Une clé par plateforme : chaque plateforme ne voit que ses propres paniers, sessions de caisse et commandes, et ses clés d'idempotence ne se mélangent pas à celles des autres. Ne jamais remettre la même clé à deux plateformes.</target>
+      </trans-unit>
+      <trans-unit id="ccf5fa13a627eb7cdd7601bb7b0be677">
+        <source>Online withdrawal</source>
+        <target>Rétractation en ligne</target>
+      </trans-unit>
+      <trans-unit id="c865964644bc2f6da3bfc15e93022e11">
+        <source>Order evidence records deleted</source>
+        <target>Preuves de commande supprimées</target>
+      </trans-unit>
+      <trans-unit id="4f3632a5124c0808ad1cf81ade8e60ce">
+        <source>Order evidence records to delete</source>
+        <target>Preuves de commande à supprimer</target>
+      </trans-unit>
+      <trans-unit id="2a24157bf95d7ffe573c36d8c386c5ce">
+        <source>Parameter registry (UcpBridgePaymentRegistry): call $params['registry']-&gt;register(new MyAdapter())</source>
+        <target>Paramètre registry (UcpBridgePaymentRegistry) : appeler $params['registry']-&gt;register(new MonAdaptateur())</target>
+      </trans-unit>
+      <trans-unit id="7650d1cd85b2117a9b5f4c3ae0c420a1">
+        <source>Payment log (charges, refunds)</source>
+        <target>Journal des paiements (débits, remboursements)</target>
+      </trans-unit>
+      <trans-unit id="73fa476b1232da11d7c7a9286347fdb5">
+        <source>Payment log entries deleted</source>
+        <target>Opérations du journal des paiements supprimées</target>
+      </trans-unit>
+      <trans-unit id="222d94db261a0c06437f8db522093bc6">
+        <source>Payment log entries to delete</source>
+        <target>Opérations du journal des paiements à supprimer</target>
+      </trans-unit>
+      <trans-unit id="7597a9d7ef13fcb5eb5604727e70db3f">
+        <source>Personal data: retention periods (GDPR)</source>
+        <target>Données personnelles : durées de conservation (RGPD)</target>
+      </trans-unit>
+      <trans-unit id="419f3742e6de8e0ec4b22cce005e7630">
+        <source>Platform</source>
+        <target>Plateforme</target>
+      </trans-unit>
+      <trans-unit id="793379b5c22a978efd2fe73f0af153f6">
+        <source>Platforms (API keys, Authorization: Bearer header)</source>
+        <target>Plateformes (clés API, en-tête Authorization: Bearer)</target>
+      </trans-unit>
+      <trans-unit id="da3124f8d8cc953e37796079fa770a9e">
+        <source>PrestaShop carts without an order deleted</source>
+        <target>Paniers PrestaShop sans commande supprimés</target>
+      </trans-unit>
+      <trans-unit id="80c727fa39b11f5cee782ab2d5eaf227">
+        <source>PrestaShop carts without an order to delete</source>
+        <target>Paniers PrestaShop sans commande à supprimer</target>
+      </trans-unit>
+      <trans-unit id="06bf4018eaf69f41662fb0045e4f28fc">
+        <source>Privacy (privacy_policy)</source>
+        <target>Confidentialité (privacy_policy)</target>
+      </trans-unit>
+      <trans-unit id="9fbf3617c6172a75648e9ac0a864bb56">
+        <source>Profile:</source>
+        <target>Profil :</target>
+      </trans-unit>
+      <trans-unit id="90b4c8644022c34e7d31ba864c0ad05b">
+        <source>Purge now</source>
+        <target>Purger maintenant</target>
+      </trans-unit>
+      <trans-unit id="38520963fcbcf5c0608941735c88676c">
+        <source>Purge now?</source>
+        <target>Purger maintenant ?</target>
+      </trans-unit>
+      <trans-unit id="23f54232f10f5b85188be8a890fecb63">
+        <source>Purge of personal data</source>
+        <target>Purge des données personnelles</target>
+      </trans-unit>
+      <trans-unit id="6e01b047ddc58b922631d9fceff0f4bb">
+        <source>Purge refused, nothing was deleted: retention period too short (%list%; or 0 to never purge). Fix the periods in the module configuration.</source>
+        <target>Purge refusée, rien n'a été supprimé : durée de conservation trop courte (%list% ; ou 0 pour ne jamais purger). Corrigez les durées dans la configuration du module.</target>
+      </trans-unit>
+      <trans-unit id="2591a150d5ee629e59595b29bb928b61">
+        <source>Purge report:</source>
+        <target>Compte rendu de la purge :</target>
+      </trans-unit>
+      <trans-unit id="4b4b94ab5b99dd67bc346696a19bd407">
+        <source>Purge simulation (nothing was deleted):</source>
+        <target>Simulation de la purge (rien n'a été supprimé) :</target>
+      </trans-unit>
+      <trans-unit id="8118b7bf07f19656c810eaba631ffaf8">
+        <source>REST API:</source>
+        <target>API REST :</target>
+      </trans-unit>
+      <trans-unit id="c5530cdd71814691c4f18b3a7acbe611">
+        <source>Reconcile stuck sessions</source>
+        <target>Rapprocher les sessions bloquées</target>
+      </trans-unit>
+      <trans-unit id="cfd085212f409c19a1fd463644915cec">
+        <source>Reconciliation done: %count% session(s) processed.</source>
+        <target>Rapprochement effectué : %count% session(s) traitée(s).</target>
+      </trans-unit>
+      <trans-unit id="b2326c3a3498ee50c8120fbaede6eeed">
+        <source>Regenerate</source>
+        <target>Régénérer</target>
+      </trans-unit>
+      <trans-unit id="e96ed073ffb71177ab2c8a5dfabc96af">
+        <source>Registered clients</source>
+        <target>Clients enregistrés</target>
+      </trans-unit>
+      <trans-unit id="ad0ec5f6d886eba49704c34293758cdc">
+        <source>Retention period too short (%category%): the law requires keeping these records for 10 years. Enter at least %min% days, or 0 to never purge. No period changed.</source>
+        <target>Durée de conservation trop courte (%category%) : la loi impose de conserver ces pièces 10 ans. Saisissez au moins %min% jours, ou 0 pour ne jamais purger. Aucune durée modifiée.</target>
+      </trans-unit>
+      <trans-unit id="ae94f1dcdb359e86c6882452a5615aaf">
+        <source>Retention periods saved.</source>
+        <target>Durées de conservation enregistrées.</target>
+      </trans-unit>
+      <trans-unit id="51b49114648ac63728f24ed893586374">
+        <source>Retention periods: %list%</source>
+        <target>Durées de conservation : %list%</target>
+      </trans-unit>
+      <trans-unit id="0dcfd046cb171cff0a3830802ad66f42">
+        <source>Returns and withdrawal (refund_policy)</source>
+        <target>Retours et rétractation (refund_policy)</target>
+      </trans-unit>
+      <trans-unit id="21313f76b111bc0df501bf89fc96ba46">
+        <source>Revoke</source>
+        <target>Révoquer</target>
+      </trans-unit>
+      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
+        <source>Save</source>
+        <target>Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="5e0507fd45e4db99277246cb777360ba">
+        <source>Save the retention periods</source>
+        <target>Enregistrer les durées</target>
+      </trans-unit>
+      <trans-unit id="fdae47a7dc2be0ca39d6eaef415f393e">
+        <source>Scheduled task</source>
+        <target>Tâche planifiée</target>
+      </trans-unit>
+      <trans-unit id="5ce3f04a1d9b10ef614c0bf056626f93">
+        <source>Scheduled task (daily)</source>
+        <target>Tâche planifiée (quotidienne)</target>
+      </trans-unit>
+      <trans-unit id="eae35e37bf71e623fb9f1ffde87353c6">
+        <source>Sessions completed by an order, personal data removed</source>
+        <target>Sessions terminées par une commande, données personnelles retirées</target>
+      </trans-unit>
+      <trans-unit id="003fb1ccf638d83455428210e749b9db">
+        <source>Sessions completed by an order, personal data to remove</source>
+        <target>Sessions terminées par une commande, données personnelles à retirer</target>
+      </trans-unit>
+      <trans-unit id="d3d6fb502b14f4a7c0b4186ba2e661fe">
+        <source>Sessions reserved for more than %minutes% minutes: %count%. Order found: session completed; charge without order: refund and incident; uncertain charge: incident to check with the payment provider; no charge: session released.</source>
+        <target>Sessions réservées depuis plus de %minutes% minutes : %count%. Commande trouvée : session terminée ; débit sans commande : remboursement et incident ; débit incertain : incident à vérifier chez le prestataire ; aucun débit : session rendue.</target>
+      </trans-unit>
+      <trans-unit id="00588ff46cc8e27807e12daa2d60aa8c">
+        <source>Shipping (shipping_policy)</source>
+        <target>Livraison (shipping_policy)</target>
+      </trans-unit>
+      <trans-unit id="6a3801884723e211a4777256cb0fe8e3">
+        <source>Simulate the purge</source>
+        <target>Simuler la purge</target>
+      </trans-unit>
+      <trans-unit id="aed70eb92a02caa615aa70754152df58">
+        <source>Stripe API URL</source>
+        <target>URL de l'API Stripe</target>
+      </trans-unit>
+      <trans-unit id="e5a0d599a55b19429747b13500967e89">
+        <source>Stripe publishable key (pk_test_...)</source>
+        <target>Clé publiable Stripe (pk_test_...)</target>
+      </trans-unit>
+      <trans-unit id="ea3f5206c5298968aaebcb043f498544">
+        <source>Stripe test secret key</source>
+        <target>Clé secrète Stripe de test</target>
+      </trans-unit>
+      <trans-unit id="7943fd1df9da56fb0eca9947630a697e">
+        <source>Stuck for more than</source>
+        <target>Bloquées depuis plus de</target>
+      </trans-unit>
+      <trans-unit id="47e611af31357b05dc38f97fe9b0dd81">
+        <source>Terms of sale (terms_of_service)</source>
+        <target>Conditions générales de vente (terms_of_service)</target>
+      </trans-unit>
+      <trans-unit id="d300d926c1c0f8d796e785c02e46e816">
+        <source>Terms of sale box ticked on the merchant's page</source>
+        <target>Case CGV cochée sur la page du marchand</target>
+      </trans-unit>
+      <trans-unit id="5ee3cd3bbfaf3f28d8008c4ac0c168a0">
+        <source>Terms of sale reviewed on the merchant's shop</source>
+        <target>Relecture des CGV chez le marchand</target>
+      </trans-unit>
+      <trans-unit id="eac0ccc8908efef0022992c755d6b4a7">
+        <source>Test payment</source>
+        <target>Paiement de test</target>
+      </trans-unit>
+      <trans-unit id="24bede052095377b14050bb2590f7e46">
+        <source>Test payment simulation secret</source>
+        <target>Secret de simulation du paiement de test</target>
+      </trans-unit>
+      <trans-unit id="b86212e7b06dfdbd3c7cbb232e5ed983">
+        <source>Totals presented</source>
+        <target>Totaux présentés</target>
+      </trans-unit>
+      <trans-unit id="191fdb4c76d9037f256c1a80d04f0b89">
+        <source>UCP evidence: what was presented to the buyer</source>
+        <target>Preuve UCP : ce qui a été présenté à l'acheteur</target>
+      </trans-unit>
+      <trans-unit id="58fbb0885e66a0a26bedf62734e3613d">
+        <source>UCP order, session %session%, %provider% %transaction%</source>
+        <target>Commande UCP, session %session%, %provider% %transaction%</target>
+      </trans-unit>
+      <trans-unit id="a60d45635f82b0a2a72ba2f5bbaeb2f8">
+        <source>UCP sessions and carts deleted</source>
+        <target>Sessions et paniers UCP supprimés</target>
+      </trans-unit>
+      <trans-unit id="56e0fea20b048a4946ecff4efd61df70">
+        <source>UCP sessions and carts to delete</source>
+        <target>Sessions et paniers UCP à supprimer</target>
+      </trans-unit>
+      <trans-unit id="8ca590dbf087dd13a5695046980c0400">
+        <source>Uninstallation</source>
+        <target>Désinstallation</target>
+      </trans-unit>
+      <trans-unit id="727ecd3662efa0a2cba3f0ef92f5ea88">
+        <source>Universal Commerce Protocol: profile, transferable cart, native checkout, variants, terms of sale and evidence, MCP.</source>
+        <target>Universal Commerce Protocol : profil, panier transférable, caisse native, déclinaisons, CGV et preuve, MCP.</target>
+      </trans-unit>
+      <trans-unit id="b2844b8e17ecaaeae68d018fe9418af0">
+        <source>Valid until</source>
+        <target>Valable jusqu'au</target>
+      </trans-unit>
+      <trans-unit id="a8efa42f82c380a21cb208cb66ab7c88">
+        <source>Version of the terms of sale presented</source>
+        <target>Version des CGV présentée</target>
+      </trans-unit>
+      <trans-unit id="99023d5ded36745f860ed4e37fc92f2c">
+        <source>Withdrawal requests deleted</source>
+        <target>Demandes de rétractation supprimées</target>
+      </trans-unit>
+      <trans-unit id="83882cb0a48f41d36cb7c0e1db01f3be">
+        <source>Withdrawal requests to delete</source>
+        <target>Demandes de rétractation à supprimer</target>
+      </trans-unit>
+      <trans-unit id="93cba07454f06a4a960172bbd6e2a435">
+        <source>Yes</source>
+        <target>Oui</target>
+      </trans-unit>
+      <trans-unit id="2e0f3a8dadb47e5dacf96b69089d26d4">
+        <source>can be changed by script only, for the test bench</source>
+        <target>modifiable par script uniquement, pour le banc d'essai</target>
+      </trans-unit>
+      <trans-unit id="91f1d11f85407ca3ad4fbee9a8bfab45">
+        <source>charge without order, payment adapter not found</source>
+        <target>débit sans commande, adaptateur introuvable</target>
+      </trans-unit>
+      <trans-unit id="8f1848e894e3c1128894572db8070160">
+        <source>charge without order, refund IMPOSSIBLE</source>
+        <target>débit sans commande, remboursement IMPOSSIBLE</target>
+      </trans-unit>
+      <trans-unit id="685f9ca0c9e1594bc60f16f3d73af4d5">
+        <source>charge without order, refunded</source>
+        <target>débit sans commande, remboursé</target>
+      </trans-unit>
+      <trans-unit id="44fdec47036f482b68b748f9d786801b">
+        <source>days</source>
+        <target>jours</target>
+      </trans-unit>
+      <trans-unit id="41a2d7b1dde58d6e957ed803c74b2686">
+        <source>error: %message%</source>
+        <target>erreur : %message%</target>
+      </trans-unit>
+      <trans-unit id="640fd0cc0ffa0316ae087652871f4486">
+        <source>minutes</source>
+        <target>minutes</target>
+      </trans-unit>
+      <trans-unit id="c7561db7a418dd39b2201dfe110ab4a4">
+        <source>never</source>
+        <target>jamais</target>
+      </trans-unit>
+      <trans-unit id="7fa3b767c460b54a2be4d49030b349c7">
+        <source>no</source>
+        <target>non</target>
+      </trans-unit>
+      <trans-unit id="0a10f6adf6fb22095d683111099833cb">
+        <source>no charge, session released (%status%)</source>
+        <target>aucun débit, session rendue (%status%)</target>
+      </trans-unit>
+      <trans-unit id="d6e87ccf19b6e0ea32e50ea8afcf44cb">
+        <source>no request</source>
+        <target>aucune demande</target>
+      </trans-unit>
+      <trans-unit id="334c4a4c42fdb79d7ebc3e73b517e6f8">
+        <source>none</source>
+        <target>aucun</target>
+      </trans-unit>
+      <trans-unit id="bb0ae732916e34f52d0bf72b1cace744">
+        <source>not expressed</source>
+        <target>non exprimé</target>
+      </trans-unit>
+      <trans-unit id="f988df91be62b8e353bd47d8a75605f7">
+        <source>not requested (review disabled)</source>
+        <target>non demandée (relecture désactivée)</target>
+      </trans-unit>
+      <trans-unit id="397af789dd3ebe5b484112abcabc9f88">
+        <source>on %date%, version %version%, IP %ip% (SAME IP as the agent's API call). Warning: non-nominative evidence, the box may have been ticked by the agent itself.</source>
+        <target>le %date%, version %version%, IP %ip% (MÊME IP que l'appel API de l'agent). Attention : preuve non nominative, la case peut avoir été cochée par l'agent lui-même.</target>
+      </trans-unit>
+      <trans-unit id="8879408dbc896b0fb71da964fadb3e1f">
+        <source>on %date%, version %version%, IP %ip%. Warning: non-nominative evidence, the box may have been ticked by the agent itself.</source>
+        <target>le %date%, version %version%, IP %ip%. Attention : preuve non nominative, la case peut avoir été cochée par l'agent lui-même.</target>
+      </trans-unit>
+      <trans-unit id="6dd187351e6498ac239f46247cbfa8c7">
+        <source>order %order% found, session completed</source>
+        <target>commande %order% trouvée, session terminée</target>
+      </trans-unit>
+      <trans-unit id="5ffd3fbe58cd2b422c93731323f2a746">
+        <source>registered by script, secret shown only once</source>
+        <target>enregistrement par script, secret affiché une seule fois</target>
+      </trans-unit>
+      <trans-unit id="44a3be4b3dd1593c21067133cdfdd363">
+        <source>requested on %date% (IP %ip%)</source>
+        <target>demandée le %date% (IP %ip%)</target>
+      </trans-unit>
+      <trans-unit id="7cdd8b0849fa5eb6145dad0f40a46a52">
+        <source>requested on %date% (IP %ip%), acknowledgement sent</source>
+        <target>demandée le %date% (IP %ip%), accusé de réception envoyé</target>
+      </trans-unit>
+      <trans-unit id="384b06f168d8301e0956d8e79f0ea7ac">
+        <source>sk_test_... ; live keys are refused. A key is saved: leave empty to keep it, "-" to delete it.</source>
+        <target>sk_test_... ; les clés live sont refusées. Une clé est enregistrée : laisser vide pour la conserver, « - » pour l'effacer.</target>
+      </trans-unit>
+      <trans-unit id="ece1aa6d77c2b07629ce5f49b5d8b9cc">
+        <source>sk_test_... ; live keys are refused. No key: Google Pay disabled.</source>
+        <target>sk_test_... ; les clés live sont refusées. Aucune clé : Google Pay désactivé.</target>
+      </trans-unit>
+      <trans-unit id="989c386c193deb1bebd88df9bdcbdadb">
+        <source>ucpbridge GDPR purge: report</source>
+        <target>Purge RGPD ucpbridge : compte rendu</target>
+      </trans-unit>
+      <trans-unit id="ecd435cc6f31c8d33d166ed000735cbc">
+        <source>ucpbridge GDPR purge: simulation, nothing is deleted</source>
+        <target>Purge RGPD ucpbridge : simulation, rien n'est supprimé</target>
+      </trans-unit>
+      <trans-unit id="aa5fb7baaa38f7ac16f201173e63feeb">
+        <source>uncertain charge, to be checked with the payment provider</source>
+        <target>débit incertain, à vérifier chez le prestataire</target>
+      </trans-unit>
+      <trans-unit id="3f454530f40eac8039f793faaece5f09">
+        <source>update interrupted, session released</source>
+        <target>mise à jour interrompue, session rendue</target>
+      </trans-unit>
+      <trans-unit id="a6105c0a611b41b08f1209506350279e">
+        <source>yes</source>
+        <target>oui</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

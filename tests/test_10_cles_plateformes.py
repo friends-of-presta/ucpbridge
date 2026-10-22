@@ -92,7 +92,7 @@ def test_migration_de_la_cle_unique(boutique):
 def back_office(post=None):
     code = "Context::getContext()->employee = new Employee(1); $m = Module::getInstanceByName('ucpbridge');\n"
     if post is not None:
-        code += ("$h = $m->getContent(); preg_match('/name=\"ucp_csrf\" value=\"([0-9a-f]+)\"/', $h, $t);\n"
+        code += ("$h = $m->getContent(); preg_match('/name=\"ucp_csrf\"[^>]*value=\"([0-9a-f]+)\"/', $h, $t);\n"
                  f"$_POST = json_decode({json.dumps(json.dumps(post))}, true);\n"
                  "if (($_POST['ucp_csrf'] ?? '') === 'JETON') { $_POST['ucp_csrf'] = $t[1]; }\n")
     return php(code + "echo $m->getContent();")
@@ -101,10 +101,10 @@ def back_office(post=None):
 def test_back_office_ajout_regeneration_suppression(boutique):
     supprimer("bo-test")
     html = back_office()
-    assert "Plateformes (clés API" in html and boutique.cle in html
+    assert 'id="ucpbridge-api-keys"' in html and boutique.cle in html
     # Jeton anti-CSRF faux : rien n'est créé.
     html = back_office({"submitUcpbridgeApiKeyAdd": "1", "ucp_csrf": "faux", "api_key_id": "bo-test", "api_key_label": "Test BO"})
-    assert "Jeton de sécurité invalide" in html and "bo-test" not in config("UCPBRIDGE_API_KEYS")
+    assert "alert-danger" in html and "bo-test" not in config("UCPBRIDGE_API_KEYS")
     try:
         html = back_office({"submitUcpbridgeApiKeyAdd": "1", "ucp_csrf": "JETON", "api_key_id": "bo-test", "api_key_label": "Test BO"})
         cle = cle_api("bo-test")
@@ -112,9 +112,9 @@ def test_back_office_ajout_regeneration_suppression(boutique):
         assert boutique.post("/carts", {"line_items": [{"item": M_BLANC, "quantity": 1}]}, cle).code == 201
         # Identifiant invalide ou déjà pris : refusé.
         html = back_office({"submitUcpbridgeApiKeyAdd": "1", "ucp_csrf": "JETON", "api_key_id": "bo-test", "api_key_label": "x"})
-        assert "invalide ou déjà utilisé" in html and cle_api("bo-test") == cle
+        assert "alert-danger" in html and cle_api("bo-test") == cle
         html = back_office({"submitUcpbridgeApiKeyAdd": "1", "ucp_csrf": "JETON", "api_key_id": "Pas Valide", "api_key_label": "x"})
-        assert "invalide ou déjà utilisé" in html
+        assert "alert-danger" in html and "Pas Valide" not in config("UCPBRIDGE_API_KEYS")
         # Régénération : ancienne clé refusée, nouvelle acceptée.
         back_office({"submitUcpbridgeApiKeyRegen": "1", "ucp_csrf": "JETON", "api_key_id": "bo-test"})
         nouvelle = cle_api("bo-test")
@@ -128,4 +128,13 @@ def test_back_office_ajout_regeneration_suppression(boutique):
     finally:
         supprimer("bo-test")
     # La plateforme par défaut n'a pas bougé.
+    assert cle_api() == boutique.cle
+
+
+def test_back_office_identifiant_echappe_dans_la_confirmation(boutique):
+    """Relecture M2 : l'identifiant de plateforme reçu en POST est échappé dans le message de confirmation."""
+    piege = '<img src=x onerror="alert(1)">'
+    html = back_office({"submitUcpbridgeApiKeyDelete": "1", "ucp_csrf": "JETON", "api_key_id": piege})
+    assert "alert-success" in html, html[-2000:]
+    assert piege not in html and "&lt;img src=x" in html
     assert cle_api() == boutique.cle

@@ -27,27 +27,27 @@ class UcpbridgeTermsModuleFrontController extends ModuleFrontController
     {
         $e = ['UcpBridgePage', 'e'];
         if (!$this->module->checkSigned('terms', ['session'])) {
-            UcpBridgePage::render('Lien invalide', '<p class="err">Lien invalide ou expiré : revenez à l\'assistant pour obtenir un nouveau lien.</p>', 403);
+            UcpBridgePage::render(UcpBridgeI18n::shop('Invalid link'), '<p class="err">' . $e(UcpBridgeI18n::shop('Invalid or expired link: go back to the assistant to get a new link.')) . '</p>', 403, 'invalid-link');
         }
         $sid = (string) Tools::getValue('session');
         $svc = new UcpBridgeCart($this->context, $this->module);
         $s = $svc->load($sid, 'checkout');
         if (!$s || UcpBridgeCart::isTerminal($s['status']) || UcpBridgeCart::isBusy($s['status'])) {
-            UcpBridgePage::render('Session terminée', '<p class="err">Cette commande est déjà passée ou annulée.</p>', 410);
+            UcpBridgePage::render(UcpBridgeI18n::shop('Session ended'), '<p class="err">' . $e(UcpBridgeI18n::shop('This order has already been placed or canceled.')) . '</p>', 410, 'session-ended');
         }
         $error = '';
         if ('POST' === $_SERVER['REQUEST_METHOD']) {
             if (!$this->module->checkFormToken($this->context->cookie, 'terms|' . $sid, Tools::getValue('csrf'))) {
-                $error = 'Le formulaire a expiré : rechargez la page.';
+                $error = UcpBridgeI18n::shop('The form has expired: reload the page.');
             } elseif (!Tools::getValue('accept_terms')) {
-                $error = 'Veuillez cocher la case pour accepter les conditions générales de vente.';
+                $error = UcpBridgeI18n::shop('Please tick the box to accept the terms of sale.');
             } else {
                 $svc->acceptTerms($s, Tools::getRemoteAddr(), (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''));
-                UcpBridgePage::render('Merci', '<p class="ok">Votre acceptation des conditions générales de vente est enregistrée.</p>'
-                    . '<p>Vous pouvez revenir à votre assistant pour finaliser la commande.</p>');
+                UcpBridgePage::render(UcpBridgeI18n::shop('Thank you'), '<p class="ok">' . $e(UcpBridgeI18n::shop('Your acceptance of the terms of sale is recorded.')) . '</p>'
+                    . '<p>' . $e(UcpBridgeI18n::shop('You can go back to your assistant to complete the order.')) . '</p>', 200, 'terms-accepted');
             }
         } elseif (!empty($s['payload']['terms_acceptance'])) {
-            UcpBridgePage::render('Déjà acceptées', '<p class="ok">Votre acceptation des CGV est déjà enregistrée. Revenez à votre assistant pour finaliser la commande.</p>');
+            UcpBridgePage::render(UcpBridgeI18n::shop('Already accepted'), '<p class="ok">' . $e(UcpBridgeI18n::shop('Your acceptance of the terms of sale is already recorded. Go back to your assistant to complete the order.')) . '</p>', 200, 'terms-already-accepted');
         }
 
         $doc = $svc->checkoutDoc($s);
@@ -55,7 +55,7 @@ class UcpbridgeTermsModuleFrontController extends ModuleFrontController
         $rows = '';
         foreach ($doc['line_items'] as $li) {
             $rows .= '<tr><td>' . (int) $li['quantity'] . ' × ' . $e($li['item']['title']) . '</td><td class="r">'
-                . $e(UcpBridgePage::euros($li['item']['price'] * $li['quantity'])) . ' TTC</td></tr>';
+                . $e(UcpBridgeI18n::shop('%amount% incl. tax', ['%amount%' => UcpBridgePage::euros($li['item']['price'] * $li['quantity'])])) . '</td></tr>';
         }
         foreach ($doc['totals'] as $t) {
             $rows .= '<tr class="' . ('total' === $t['type'] ? 'total' : '') . '"><td>' . $e($t['display_text'] ?? $t['type']) . '</td><td class="r">'
@@ -67,15 +67,15 @@ class UcpbridgeTermsModuleFrontController extends ModuleFrontController
         }
         $action = $e($_SERVER['REQUEST_URI'] ?? '');
         $body = ($error ? '<p class="err">' . $e($error) . '</p>' : '')
-            . '<h2>Récapitulatif de votre commande</h2><table>' . $rows . '</table>'
+            . '<h2>' . $e(UcpBridgeI18n::shop('Summary of your order')) . '</h2><table>' . $rows . '</table>'
             . '<h2>' . $e($terms['title']) . '</h2>'
             // Contenu de la page CMS saisi par le marchand dans son back-office (même rendu que la boutique).
             . '<div class="terms">' . $terms['content'] . '</div>'
-            . '<p class="note">Version ' . $e($terms['version']) . '. Documents applicables : </p><ul class="note">' . $links . '</ul>'
+            . '<p class="note">' . $e(UcpBridgeI18n::shop('Version %version%. Applicable documents:', ['%version%' => $terms['version']])) . ' </p><ul class="note">' . $links . '</ul>'
             . '<form method="post" action="' . $action . '">'
             . '<input type="hidden" name="csrf" value="' . $e($this->module->formToken($this->context->cookie, 'terms|' . $sid)) . '">'
-            . '<label class="check"><input type="checkbox" name="accept_terms" value="1"> J\'ai lu et j\'accepte les CGV</label>'
-            . '<button type="submit">Enregistrer mon acceptation</button></form>';
-        UcpBridgePage::render('Conditions générales de vente', $body);
+            . '<label class="check"><input type="checkbox" name="accept_terms" value="1"> ' . $e(UcpBridgeI18n::shop('I have read and accept the terms of sale')) . '</label>'
+            . '<button type="submit">' . $e(UcpBridgeI18n::shop('Record my acceptance')) . '</button></form>';
+        UcpBridgePage::render(UcpBridgeI18n::shop('Terms of sale'), $body, 200, 'terms-review');
     }
 }

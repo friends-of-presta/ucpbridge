@@ -83,10 +83,10 @@ class UcpBridgeIdempotency
             return null;
         }
         if (!hash_equals((string) $row['request_hash'], (string) $hash)) {
-            return [409, ['code' => 'idempotency_conflict', 'content' => 'Idempotency-Key déjà utilisée avec une requête différente']];
+            return [409, ['code' => 'idempotency_conflict', 'content' => UcpBridgeI18n::api('Idempotency-Key already used with a different request')]];
         }
         if (0 === (int) $row['http_code']) {
-            return [409, ['code' => 'idempotency_in_progress', 'content' => 'Une requête avec cette Idempotency-Key est encore en cours']];
+            return [409, ['code' => 'idempotency_in_progress', 'content' => UcpBridgeI18n::api('A request with this Idempotency-Key is still in progress')]];
         }
 
         return [(int) $row['http_code'], json_decode((string) $row['response'], true), true];

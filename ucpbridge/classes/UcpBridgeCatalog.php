@@ -156,7 +156,7 @@ class UcpBridgeCatalog
             $idProduct = $ref['id_product'];
             $idPa = $ref['id_product_attribute'];
             if (!$this->productExists($idProduct) || ($idPa && !$this->combinationBelongs($idProduct, $idPa))) {
-                return $this->fail('item_unavailable', 'Article introuvable : ' . $id);
+                return $this->fail('item_unavailable', UcpBridgeI18n::api('Item not found: %id%', ['%id%' => $id]));
             }
         } else {
             $idProduct = $this->productIdByReference($id);
@@ -170,9 +170,9 @@ class UcpBridgeCatalog
                     $idProduct = (int) $combos[0]['id_product'];
                     $idPa = (int) $combos[0]['id_product_attribute'];
                 } elseif (count($combos) > 1) {
-                    return $this->fail('ambiguous_reference', 'La référence ' . $id . ' désigne plusieurs déclinaisons, précisez variant_id');
+                    return $this->fail('ambiguous_reference', UcpBridgeI18n::api('The reference %id% designates several variants, specify variant_id', ['%id%' => $id]));
                 } else {
-                    return $this->fail('item_unavailable', 'Article introuvable : ' . $id);
+                    return $this->fail('item_unavailable', UcpBridgeI18n::api('Item not found: %id%', ['%id%' => $id]));
                 }
             } elseif (null !== $ref['variant']) {
                 // Forme 2 : produit + variant_id
@@ -184,7 +184,7 @@ class UcpBridgeCatalog
                     $idPa = 1 === count($combos) ? (int) $combos[0]['id_product_attribute'] : 0;
                 }
                 if (!$idPa || !$this->combinationBelongs($idProduct, $idPa)) {
-                    return $this->fail('variant_unknown', 'Déclinaison ' . $ref['variant'] . ' inconnue pour ' . $id,
+                    return $this->fail('variant_unknown', UcpBridgeI18n::api('Variant %variant% unknown for %id%', ['%variant%' => $ref['variant'], '%id%' => $id]),
                         ['variants' => $this->publicVariants($idProduct)]);
                 }
             }
@@ -192,17 +192,17 @@ class UcpBridgeCatalog
 
         $product = new Product($idProduct, false, $this->idLang(), $this->idShop());
         if (!Validate::isLoadedObject($product) || !$product->active || !$product->available_for_order) {
-            return $this->fail('item_unavailable', 'Article non disponible à la vente : ' . $id);
+            return $this->fail('item_unavailable', UcpBridgeI18n::api('Item not available for sale: %id%', ['%id%' => $id]));
         }
         $hasVariants = (bool) $product->hasAttributes();
         if ($hasVariants && !$idPa) {
             $list = $this->publicVariants($idProduct);
             $labels = array_map(function ($v) {
-                return $v['id'] . ' (' . $v['title'] . ($v['available'] ? '' : ', épuisé') . ')';
+                return $v['id'] . ' (' . ($v['available'] ? $v['title'] : UcpBridgeI18n::api('%title%, sold out', ['%title%' => $v['title']])) . ')';
             }, $list);
 
             return $this->fail('variant_required',
-                '« ' . $product->name . ' » existe en plusieurs déclinaisons : précisez item.variant_id parmi ' . implode(' ; ', $labels),
+                UcpBridgeI18n::api('"%name%" exists in several variants: specify item.variant_id among %variants%', ['%name%' => $product->name, '%variants%' => implode(' ; ', $labels)]),
                 ['variants' => $list]);
         }
         if (!$hasVariants) {

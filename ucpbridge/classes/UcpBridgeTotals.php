@@ -19,15 +19,16 @@ class UcpBridgeTotals
     public static function checkout($subHt, $shipHt, $totalHt, $totalTtc, $country)
     {
         $discHt = max(0, (int) $subHt + (int) $shipHt - (int) $totalHt);
-        $t = [['type' => 'subtotal', 'amount' => (int) $subHt, 'display_text' => 'Sous-total HT']];
+        $t = [['type' => 'subtotal', 'amount' => (int) $subHt, 'display_text' => UcpBridgeI18n::api('Subtotal excl. tax')]];
         if ($discHt > 0) {
-            $t[] = ['type' => 'discount', 'amount' => -$discHt, 'display_text' => 'Réductions HT'];
+            $t[] = ['type' => 'discount', 'amount' => -$discHt, 'display_text' => UcpBridgeI18n::api('Discounts excl. tax')];
         }
         if (null !== $shipHt) {
-            $t[] = ['type' => 'fulfillment', 'amount' => (int) $shipHt, 'display_text' => 'Livraison HT'];
+            $t[] = ['type' => 'fulfillment', 'amount' => (int) $shipHt, 'display_text' => UcpBridgeI18n::api('Shipping excl. tax')];
         }
-        $t[] = ['type' => 'tax', 'amount' => (int) $totalTtc - (int) $totalHt, 'display_text' => 'TVA' . ($country ? ' (' . $country . ')' : '')];
-        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => 'Total TTC'];
+        $t[] = ['type' => 'tax', 'amount' => (int) $totalTtc - (int) $totalHt,
+            'display_text' => $country ? UcpBridgeI18n::api('VAT (%country%)', ['%country%' => $country]) : UcpBridgeI18n::api('VAT')];
+        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => UcpBridgeI18n::api('Total incl. tax')];
 
         return $t;
     }
@@ -35,13 +36,13 @@ class UcpBridgeTotals
     /** Commande passée : montants relus sur la commande PrestaShop. */
     public static function order($subHt, $shipHt, $discHt, $totalTtc)
     {
-        $t = [['type' => 'subtotal', 'amount' => (int) $subHt, 'display_text' => 'Sous-total HT']];
+        $t = [['type' => 'subtotal', 'amount' => (int) $subHt, 'display_text' => UcpBridgeI18n::api('Subtotal excl. tax')]];
         if ((int) $discHt) {
-            $t[] = ['type' => 'discount', 'amount' => -abs((int) $discHt), 'display_text' => 'Réductions HT'];
+            $t[] = ['type' => 'discount', 'amount' => -abs((int) $discHt), 'display_text' => UcpBridgeI18n::api('Discounts excl. tax')];
         }
-        $t[] = ['type' => 'fulfillment', 'amount' => (int) $shipHt, 'display_text' => 'Livraison HT'];
-        $t[] = ['type' => 'tax', 'amount' => (int) $totalTtc - (int) $subHt + abs((int) $discHt) - (int) $shipHt, 'display_text' => 'TVA'];
-        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => 'Total TTC'];
+        $t[] = ['type' => 'fulfillment', 'amount' => (int) $shipHt, 'display_text' => UcpBridgeI18n::api('Shipping excl. tax')];
+        $t[] = ['type' => 'tax', 'amount' => (int) $totalTtc - (int) $subHt + abs((int) $discHt) - (int) $shipHt, 'display_text' => UcpBridgeI18n::api('VAT')];
+        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => UcpBridgeI18n::api('Total incl. tax')];
 
         return $t;
     }
@@ -49,11 +50,11 @@ class UcpBridgeTotals
     /** Panier transférable : montants TTC, livraison calculée à la caisse. */
     public static function cart($subTtc, $totalTtc)
     {
-        $t = [['type' => 'subtotal', 'amount' => (int) $subTtc, 'display_text' => 'Sous-total TTC']];
+        $t = [['type' => 'subtotal', 'amount' => (int) $subTtc, 'display_text' => UcpBridgeI18n::api('Subtotal incl. tax')]];
         if ((int) $subTtc - (int) $totalTtc > 0) {
-            $t[] = ['type' => 'discount', 'amount' => (int) $totalTtc - (int) $subTtc, 'display_text' => 'Réductions TTC'];
+            $t[] = ['type' => 'discount', 'amount' => (int) $totalTtc - (int) $subTtc, 'display_text' => UcpBridgeI18n::api('Discounts incl. tax')];
         }
-        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => 'Total estimé TTC (livraison calculée à la caisse)'];
+        $t[] = ['type' => 'total', 'amount' => (int) $totalTtc, 'display_text' => UcpBridgeI18n::api('Estimated total incl. tax (shipping calculated at checkout)')];
 
         return $t;
     }

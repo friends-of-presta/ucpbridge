@@ -85,8 +85,7 @@ class UcpBridgeLegal
         return [
             'type' => 'warning',
             'code' => 'withdrawal_right',
-            'content' => 'Droit de rétractation : vous disposez de 14 jours à compter de la réception de votre commande pour vous rétracter, '
-                . 'sans avoir à vous justifier. Une fonction de rétractation en ligne est accessible depuis l\'e-mail de confirmation de commande.',
+            'content' => UcpBridgeI18n::api('Right of withdrawal: you have 14 days from receipt of your order to withdraw, without having to give any reason. An online withdrawal function is available from the order confirmation e-mail.'),
             'presentation' => 'disclosure',
             'url' => (string) $url,
         ];
