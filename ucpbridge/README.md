@@ -210,6 +210,31 @@ enregistrée avec l'URL par défaut, vers le conteneur stripe-mock sur le banc. 
   (120 jours) vers `module/ucpbridge/withdraw`. Cette page récapitule la commande ; la confirmation (jeton anti-CSRF)
   enregistre la demande (`ps_ucpbridge_withdrawal`, une par commande, date et IP) et envoie un **accusé de réception par
   e-mail** (modèle `mails/fr/ucp_withdrawal`), support durable.
+- **Durées de conservation et purge** (RGPD, limitation de la conservation) : configurables par catégorie, en jours
+  (0 = jamais purgé). Valeurs par défaut :
+
+  | Catégorie | Défaut | Point de départ | Traitement |
+  |---|---|---|---|
+  | Sessions de caisse et paniers UCP terminés ou expirés | 30 j | dernière activité | supprimés avec leur panier PrestaShop sans commande (visiteur sans compte) et leur adresse sans client ; une session terminée par une commande est gardée sans les données personnelles de l'acheteur (`buyer`, `consent`, `destination`, `terms_acceptance`, `context`) |
+  | Clients invités créés par le module, sans aucune commande | 30 j | création | supprimés (`Customer::delete` : adresses inutilisées, paniers sans commande) ; jamais tant qu'ils ont une session en échec (acheteur peut-être à rembourser) |
+  | Codes et jetons OAuth expirés ou révoqués | 30 j | expiration, ou émission pour un jeton révoqué | supprimés |
+  | Journal des paiements | 3650 j (minimum) | opération | supprimé ; sessions en échec (incident de paiement : débit non remboursé ou incertain) et leur acheteur invité gardés aussi longtemps |
+  | Journal de preuve et demandes de rétractation | 3650 j (minimum) | enregistrement | supprimés |
+
+  10 ans pour les paiements (pièces comptables, article L123-22 du Code de commerce) et pour les preuves (contrats
+  conclus par voie électronique à partir de 120 euros, articles L213-1 et D213-2 du Code de la consommation). Les clés
+  d'idempotence (24 h) sont purgées au passage. Ces deux durées légales ne descendent jamais sous 3650 jours (0, jamais
+  purgé, reste permis) : une durée plus courte est refusée à l'enregistrement, et si elle est écrite en base par un autre
+  moyen, la purge refuse de tourner (message d'erreur au back-office, code de sortie 2 en ligne de commande) sans rien
+  supprimer. Jamais touchés : les commandes passées, leurs clients (même invités) et
+  leurs adresses, les sessions en cours de finalisation ou de rapprochement, les paniers et adresses des clients avec
+  compte. Les invités créés par le module sont enregistrés dans `ps_ucpbridge_customer` (ceux de la 0.1.2 sont repris
+  depuis les sessions à la mise à jour) : un client créé autrement n'est jamais purgé par le module.
+  Purge : `php modules/ucpbridge/bin/purge.php` (tâche cron quotidienne ; `--dry-run` pour une simulation) ou boutons
+  « Simuler la purge » et « Purger maintenant » de la configuration. Compte rendu chiffré par catégorie, aussi consigné
+  au journal PrestaShop (« ucpbridge purge RGPD ») : il compte aussi les paniers et adresses supprimés avec un invité,
+  et la simulation donne les mêmes nombres que la purge. Sessions lues par lots de 500, sans relire celles dont les
+  données personnelles sont déjà retirées.
 
 ### Transport MCP
 
@@ -314,22 +339,24 @@ Protocole et sécurité
 
 Preuve, données personnelles, conformité
 - **Acceptation des CGV non probante** (voir plus haut) : la case peut être cochée par l'agent.
-- **Aucune durée de conservation ni purge** : sessions (e-mail, nom, adresse, téléphone), clients invités créés dès
-  qu'un e-mail est fourni (même sans commande), codes et jetons OAuth expirés, journal des paiements restent en base.
-- **La désinstallation supprime le journal de preuve et les demandes de rétractation**, sans confirmation : exporter
-  ces tables avant toute désinstallation (une réinstallation pour mise à jour efface les preuves).
+- Purge RGPD : rien n'est automatique tant que `bin/purge.php` n'est pas planifié (ou lancé depuis la configuration).
+  Les données d'un invité qui a commandé (client, adresses, commande) relèvent de la politique de conservation de la
+  boutique PrestaShop, pas du module ; aucune anonymisation des clients n'est faite. Les durées par défaut sont une
+  proposition à valider par le marchand et son conseil (registre des traitements).
+- Tables de preuve conservées après une désinstallation : elles restent en base sans module pour les lire (export CSV
+  à faire avant, ou réinstaller le module pour les consulter). La 0.1.2 et les versions antérieures, elles, les
+  suppriment à la désinstallation : passer à la 0.1.3 par mise à jour, jamais par désinstallation.
 - Aucune chaîne traduisible (`$this->l()` / `trans()`) : messages aux agents en français, modèle `mails/en/` en français.
 
 Compatibilité et code
 - Éprouvé uniquement sur PrestaShop **9.1.5** (image Docker officielle, PHP 8.5). Minimum déclaré 9.1.0. PrestaShop 8
   n'est pas testé. PHP minimum : celui de PrestaShop 9.1 (8.1) ; les tests unitaires exigent PHPUnit 12, donc PHP 8.3.
-- Script `upgrade/` absent : la 0.1.2 ajoute des colonnes (`issued_us`) et une table
-  (`ps_ucpbridge_oauth_revocation`), il faut désinstaller la version précédente puis installer la 0.1.2 (ce qui efface
-  les preuves, voir ci-dessus).
+- Mise à jour en place éprouvée à partir de la 0.1.2 seulement (première version publiée) : une version de test
+  antérieure se désinstalle puis s'installe.
 - Concurrence entre le lien de reprise et une mise à jour : si l'acheteur ouvre le lien pendant qu'une mise à jour de
   l'agent est en cours (fraction de seconde), le lien est refusé avec « réessayez dans quelques secondes ».
-- Back-office et fiche commande en HTML construit à la main (pas de `HelperForm` ni de gabarits Smarty) ;
-  `UcpBridgeCart` concentre encore panier, caisse, client, paiement, preuve et commande.
+- Configuration du module en `HelperForm` (formulaires « legacy » de PrestaShop), pas en formulaires Symfony : le
+  passage à une page Symfony attendra que le module n'ait plus à couvrir qu'une seule génération de PrestaShop.
 - Lecture du profil de l'agent (`UCP-Agent`) : volontairement aucun appel sortant, l'en-tête est seulement consigné.
 
 ## Installation
@@ -344,9 +371,24 @@ rm -rf var/cache/*
 
 À l'installation, le module génère la clé API de la plateforme par défaut (`ucpk_...`) et le secret HMAC des liens signés ; aucun secret,
 mot de passe ni clé n'est livré dans le code. Il crée ses tables (`ps_ucpbridge_*`), ses hooks et le hook d'extension
-`actionUcpBridgeRegisterPaymentProviders`. La désinstallation supprime tables (**y compris le journal de preuve et les
-rétractations**), configuration (`UCPBRIDGE_*`), inscriptions aux hooks, hook d'extension (s'il ne sert à aucun autre
-module) et bloc `.htaccess`.
+`actionUcpBridgeRegisterPaymentProviders`. La désinstallation supprime les tables de travail (sessions, idempotence,
+OAuth), la configuration (`UCPBRIDGE_*`), les inscriptions aux hooks, le hook d'extension (s'il ne sert à aucun autre
+module) et le bloc `.htaccess`. Elle **conserve par défaut** le journal de preuve (`ps_ucpbridge_proof`), les demandes
+de rétractation (`ps_ucpbridge_withdrawal`), le journal des paiements (`ps_ucpbridge_payment`) et la liste des clients
+invités créés par le module (`ps_ucpbridge_customer`, identifiants seulement, pour la purge RGPD) : une réinstallation
+les retrouve tels quels. Pour les supprimer aussi, cocher dans la configuration « Supprimer aussi le journal de
+preuve... à la prochaine désinstallation » (après un export CSV). Ce choix est effacé avec la configuration : il ne
+vaut que pour la désinstallation qui suit.
+
+**Mise à jour** (à partir de la 0.1.2) : téléverser la nouvelle archive par le gestionnaire de modules, ou remplacer
+les fichiers puis lancer `php bin/console prestashop:module upgrade ucpbridge`, sans désinstaller. PrestaShop exécute
+alors les scripts `upgrade/upgrade-X.Y.Z.php` des versions intermédiaires. Chacun appelle `Ucpbridge::upgradeInPlace()`,
+qui crée les tables, colonnes (`Ucpbridge::ADDED_COLUMNS`), hooks et clés de configuration manquants, sans modifier
+aucune ligne ni aucune valeur déjà configurée (clé API, secret des liens signés, clients OAuth, pages légales). Le
+script est rejouable. S'il échoue, PrestaShop désactive le module et garde l'ancienne version en base, sans perte.
+Une nouvelle colonne s'ajoute à la fois dans son `CREATE TABLE` et dans `Ucpbridge::ADDED_COLUMNS` : le test
+`tests/test_11_mise_a_jour.py` compare le schéma d'une boutique mise à jour depuis la 0.1.2 à celui d'une
+installation fraîche.
 
 Le module ajoute en tête du `.htaccess` (et y revient à chaque régénération) les règles `/.well-known/ucp`,
 `/ucp/v1/*` (dont `/ucp/v1/mcp`), `/.well-known/oauth-authorization-server` et `/ucp/oauth/*`, car le routeur
@@ -365,7 +407,17 @@ Modules > UCP Bridge pour PrestaShop (formulaire protégé par un jeton anti-CSR
   clé publiable, merchant_id de test ; l'URL de l'API Stripe est affichée, modifiable par script uniquement ;
 - clients OAuth : enregistrement par script (`UcpBridgeOAuth::registerClient`), secret haché en base ;
 - accès agents actifs (assistant, client, date de liaison, échéance), avec révocation ;
-- rapprochement des sessions bloquées (bouton, seuil en minutes), voir plus haut.
+- rapprochement des sessions bloquées (bouton, seuil en minutes), voir plus haut ;
+- journal de preuve et rétractations : nombre d'enregistrements, export CSV (bouton « Exporter les preuves et
+  rétractations », jeton anti-CSRF du module) ; option de suppression à la désinstallation (« Non » par défaut).
+  Format du fichier `ucpbridge-preuves-AAAAMMJJ-HHMMSS.csv` : UTF-8 avec BOM, séparateur `;`, fins de ligne CRLF, une
+  ligne par commande (preuve et rétractation éventuelle) puis les rétractations sans preuve ; colonnes `id_commande`,
+  `reference_commande`, `date_preuve`, `session`, `agent_ucp`, `appelant`, `ip_appel_api`, `user_agent_appel_api`,
+  `version_cgv`, `acceptation_cgv`, `liens_legaux`, `mentions`, `totaux`, `consentements` (JSON tels qu'enregistrés),
+  `retractation_date`, `retractation_email`, `retractation_ip`, `retractation_accuse_envoye`. Une valeur qui
+  commencerait par `=`, `+`, `-` ou `@` est préfixée d'une apostrophe (pas de formule exécutée par le tableur) ;
+- données personnelles : durées de conservation par catégorie (jours, 0 = jamais), « Simuler la purge », « Purger
+  maintenant », avec le compte rendu (voir « Durées de conservation et purge »).
 
 Les e-mails sont ceux de PrestaShop (Paramètres avancés > E-mail) : vérifier que l'envoi est actif.
 
@@ -415,27 +467,54 @@ python3 mcp_client.py   # client MCP minimal : « t-shirt colibri taille M » ju
   d'un hook après création de la commande (pas de remboursement), 10 tours `PUT` et `complete` simultanés, débit
   refusé sur panier vide, 5 rafraîchissements simultanés (une seule paire), 40 tours révocation et rafraîchissement
   simultanés (aucun jeton survivant), processus arrêté après le débit ou après la commande puis rapprochement en ligne
-  de commande, bouton de rapprochement, panier UCP figé après ouverture de son lien.
+  de commande, bouton de rapprochement, panier UCP figé après ouverture de son lien ; mise à jour depuis la 0.1.2
+  publiée (`tests/test_11_mise_a_jour.py`) : données, configuration et jetons conservés, schéma identique à une
+  installation fraîche, script rejouable ; conservation des preuves (`tests/test_12_conserver_preuves.py`) :
+  désinstallation puis réinstallation sans perte, suppression sur choix explicite, export CSV (contenu, formule
+  neutralisée, téléchargement depuis le back-office, jeton refusé) ; purge RGPD (`tests/test_13_rgpd_purge.py`) :
+  durées par défaut, invité sans commande purgé avec adresse, panier et session, invité qui a commandé jamais purgé
+  (session gardée sans données personnelles, commande relue), session en cours jamais touchée, codes, jetons,
+  paiements, preuves et rétractations selon leur durée, durée 0, simulation, back-office (jeton, durée invalide),
+  adresse orpheline, commandes de la boutique inchangées après chaque purge ; configuration depuis le navigateur
+  (`tests/test_14_back_office.py`) : chaque réglage enregistré et réaffiché, clé Stripe conservée ou effacée,
+  plateformes, durées, simulation de purge, rapprochement, révocation d'un accès agent, jeton anti-CSRF faux refusé.
 
 ## Architecture
 
 ```
-ucpbridge.php                 module (PaymentModule pour validateOrder), installation, hooks, liens signés, configuration
+ucpbridge.php                 module (PaymentModule pour validateOrder), installation, hooks, liens signés
+classes/admin/UcpBridgeConfigPage.php page de configuration : formulaires HelperForm, traitement, jeton anti-CSRF
+views/templates/admin/        gabarits Smarty de la configuration (plateformes, accès agents, preuves, comptes rendus)
+views/templates/hook/         bloc de preuve de la fiche commande, lien « Mes accès agents » du compte client
 controllers/front/api.php     REST /ucp/v1/* et MCP /ucp/v1/mcp : authentification, idempotence, routage (dispatch commun)
 controllers/front/handoff.php continue_url du panier : rattache le panier au visiteur
 controllers/front/terms.php   relecture et acceptation des CGV (requires_buyer_review)
 controllers/front/withdraw.php rétractation en ligne et accusé de réception
 controllers/front/oauth.php   serveur d'autorisation OAuth 2.0 (identity linking)
 controllers/front/access.php  « Mes accès agents » : liste et révocation des assistants reliés (compte client)
-classes/UcpBridgeCart.php     coeur métier : panier, caisse, commande, consentements, journal de preuve
+classes/UcpBridgeCart.php     façade du coeur métier (panier, caisse, commande) : assemble et délègue à classes/cart/
+classes/cart/UcpBridgeCaller.php, UcpBridgeSessionStore.php   appelant ; sessions, statuts, réservation atomique
+classes/cart/UcpBridgeCartLines.php, UcpBridgeBuyer.php, UcpBridgeFulfillment.php   lignes et panier PrestaShop ;
+                              acheteur, invité, consentements ; adresse et transporteurs
+classes/cart/UcpBridgeCartSession.php, UcpBridgeCheckoutSession.php   panier transférable ; session de caisse
+classes/cart/UcpBridgeCheckoutStatus.php, UcpBridgeCheckoutView.php, UcpBridgeOrderView.php   statut ; documents UCP
+classes/cart/UcpBridgeCheckoutCompletion.php   finalisation : débit, commande, journaux des paiements et de preuve
+classes/cart/UcpBridgeReconciler.php   rapprochement des sessions bloquées
+classes/cart/UcpBridgeMessage.php   messages et enveloppes UCP (logique pure)
 classes/UcpBridgeCatalog.php  résolution des articles et déclinaisons, prix, stock, recherche
 classes/UcpBridgeDiscount.php codes promo sur les règles panier PrestaShop
 classes/UcpBridgeMcp.php      JSON-RPC 2.0 / MCP, traduit chaque outil vers la route REST (logique pure)
 classes/UcpBridgeLegal.php, UcpBridgeConsent.php, UcpBridgeTotals.php, UcpBridgeItemRef.php, UcpBridgeSigner.php,
 UcpBridgePkce.php             logique pure, couverte par les tests unitaires
 classes/UcpBridgeProof.php    tables du journal de preuve, des rétractations et des paiements (débits, remboursements)
+classes/UcpBridgeExport.php   export CSV des preuves et rétractations (configuration du module)
 classes/payment/              adaptateurs de paiement (interface, registre, mock, Stripe pour Google Pay)
+classes/UcpBridgeSchema.php   évolution du schéma en place (colonnes et configuration manquantes), mise à jour
+upgrade/upgrade-X.Y.Z.php     scripts de mise à jour lancés par PrestaShop (appellent Ucpbridge::upgradeInPlace)
 bin/reconcile.php             rapprochement des sessions bloquées (ligne de commande uniquement)
+bin/purge.php                 purge RGPD selon les durées de conservation (ligne de commande uniquement, --dry-run)
+classes/UcpBridgeRetention.php durées de conservation, données personnelles d'une session, compte rendu (logique pure)
+classes/UcpBridgePurge.php    purge RGPD (sessions, invités sans commande, OAuth, paiements, preuves)
 mails/{fr,en}/                modèle de l'accusé de réception de rétractation
 ```
 

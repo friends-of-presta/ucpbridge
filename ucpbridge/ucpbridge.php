@@ -19,14 +19,32 @@ require_once __DIR__ . '/classes/UcpBridgePkce.php';
 require_once __DIR__ . '/classes/UcpBridgeConsent.php';
 require_once __DIR__ . '/classes/UcpBridgeLegal.php';
 require_once __DIR__ . '/classes/UcpBridgeCatalog.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCaller.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeSessionStore.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeMessage.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCartLines.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeBuyer.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeFulfillment.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCheckoutStatus.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCheckoutView.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCheckoutCompletion.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeReconciler.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeOrderView.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCartSession.php';
+require_once __DIR__ . '/classes/cart/UcpBridgeCheckoutSession.php';
 require_once __DIR__ . '/classes/UcpBridgeCart.php';
 require_once __DIR__ . '/classes/UcpBridgeIdempotency.php';
 require_once __DIR__ . '/classes/UcpBridgeApiKeys.php';
+require_once __DIR__ . '/classes/UcpBridgeSchema.php';
 require_once __DIR__ . '/classes/UcpBridgeDiscount.php';
 require_once __DIR__ . '/classes/UcpBridgeOAuth.php';
 require_once __DIR__ . '/classes/UcpBridgeProof.php';
+require_once __DIR__ . '/classes/UcpBridgeExport.php';
+require_once __DIR__ . '/classes/UcpBridgeRetention.php';
+require_once __DIR__ . '/classes/UcpBridgePurge.php';
 require_once __DIR__ . '/classes/UcpBridgePage.php';
 require_once __DIR__ . '/classes/UcpBridgeMcp.php';
+require_once __DIR__ . '/classes/admin/UcpBridgeConfigPage.php';
 require_once __DIR__ . '/classes/payment/UcpBridgePaymentProvider.php';
 require_once __DIR__ . '/classes/payment/UcpBridgeMockProvider.php';
 require_once __DIR__ . '/classes/payment/UcpBridgeStripeProvider.php';
@@ -51,7 +69,9 @@ class Ucpbridge extends PaymentModule
     ];
     const CONFIG_KEYS = ['UCPBRIDGE_API_KEY', 'UCPBRIDGE_API_KEYS', 'UCPBRIDGE_LINK_SECRET', 'UCPBRIDGE_MOCK_SECRET', 'UCPBRIDGE_STRIPE_KEY', 'UCPBRIDGE_STRIPE_PK',
         'UCPBRIDGE_STRIPE_API_BASE', 'UCPBRIDGE_GPAY_MERCHANT_ID', 'UCPBRIDGE_OAUTH_CLIENTS', 'UCPBRIDGE_TERMS_REVIEW',
-        'UCPBRIDGE_CMS_TERMS', 'UCPBRIDGE_CMS_PRIVACY', 'UCPBRIDGE_CMS_REFUND', 'UCPBRIDGE_CMS_SHIPPING'];
+        'UCPBRIDGE_CMS_TERMS', 'UCPBRIDGE_CMS_PRIVACY', 'UCPBRIDGE_CMS_REFUND', 'UCPBRIDGE_CMS_SHIPPING', 'UCPBRIDGE_UNINSTALL_PURGE',
+        'UCPBRIDGE_RETENTION_SESSIONS', 'UCPBRIDGE_RETENTION_GUESTS', 'UCPBRIDGE_RETENTION_OAUTH', 'UCPBRIDGE_RETENTION_PAYMENTS',
+        'UCPBRIDGE_RETENTION_PROOFS'];
     const HOOKS = ['moduleRoutes', 'actionHtaccessCreate', 'displayAdminOrderMain', 'actionEmailAddAfterContent',
         'actionGetExtraMailTemplateVars', 'displayCustomerAccount'];
     /** Durée de validité du lien de rétractation envoyé par e-mail (le droit court 14 jours après la réception). */
@@ -61,7 +81,7 @@ class Ucpbridge extends PaymentModule
     {
         $this->name = 'ucpbridge';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.2';
+        $this->version = '0.1.3';
         $this->author = 'Friends of Presta (Christophe Vidal)';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -80,18 +100,64 @@ class Ucpbridge extends PaymentModule
             && $this->installDb()
             && UcpBridgeOAuth::installDb()
             && UcpBridgeProof::installDb()
+            // Tables de preuve conservées par une désinstallation antérieure : complétées si elles datent d'une version
+            // plus ancienne, sans toucher aux lignes.
+            && UcpBridgeSchema::addMissingColumns(self::ADDED_COLUMNS)
             && $this->installConfig()
+            && $this->installHtaccess();
+    }
+
+    /**
+     * Colonnes ajoutées aux tables après la première publication (0.1.2) : [table sans préfixe => [colonne => définition]].
+     * Toute colonne ajoutée à un CREATE TABLE doit aussi figurer ici, sinon une boutique mise à jour ne l'aura pas
+     * (test d'intégration tests/test_11_mise_a_jour.py : schéma mis à jour comparé à celui d'une installation fraîche).
+     * Aucune pour la 0.1.3 : les corrections #1 à #4 n'ajoutent que des clés dans le JSON `payload` des sessions
+     * (charge_attempt, charge_unknown), lues avec une valeur par défaut.
+     */
+    const ADDED_COLUMNS = [];
+
+    /**
+     * Mise à jour en place, sans perte (appelée par chaque script upgrade/upgrade-X.Y.Z.php) : tables manquantes
+     * créées, colonnes ajoutées, hooks enregistrés, clés de configuration manquantes créées avec leur valeur par
+     * défaut, règles de réécriture réinsérées. Les lignes et les valeurs déjà configurées ne sont jamais modifiées.
+     * Rejouable : un second passage ne change rien.
+     */
+    public function upgradeInPlace()
+    {
+        // Clé unique de la 0.1.2 (UCPBRIDGE_API_KEY) migrée vers la plateforme « default » AVANT de créer les clés
+        // manquantes : sinon UCPBRIDGE_API_KEYS naîtrait avec une clé neuve et la plateforme en place perdrait l'accès.
+        // L'ancienne clé n'est supprimée qu'une fois la nouvelle enregistrée ; sinon la mise à jour échoue.
+        if (!UcpBridgeApiKeys::migrateLegacy()) {
+            return false;
+        }
+
+        return $this->installProviderHook()
+            && $this->registerHook(self::HOOKS)
+            && $this->installDb()
+            && UcpBridgeOAuth::installDb()
+            && UcpBridgeProof::installDb()
+            && UcpBridgeSchema::addMissingColumns(self::ADDED_COLUMNS)
+            // Invités créés par une version antérieure (sessions encore en base) : repris pour la purge RGPD.
+            && UcpBridgePurge::backfillGuests()
+            && UcpBridgeSchema::addMissingConfig($this->configDefaults())
             && $this->installHtaccess();
     }
 
     public function uninstall()
     {
         $this->removeHtaccess();
+        // Choix lu AVANT la suppression de la configuration : sans case cochée, les preuves sont conservées.
+        $dropEvidence = (bool) Configuration::get('UCPBRIDGE_UNINSTALL_PURGE');
         foreach (self::CONFIG_KEYS as $k) {
             Configuration::deleteByName($k);
         }
         UcpBridgeOAuth::uninstallDb();
-        UcpBridgeProof::uninstallDb();
+        UcpBridgeProof::uninstallDb($dropEvidence);
+        if ($dropEvidence) {
+            // Liste des invités créés par le module : gardée avec les preuves, pour que la purge les retrouve après une
+            // réinstallation (identifiants seulement, aucune donnée personnelle).
+            Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_customer`');
+        }
         Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_session`');
         Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'ucpbridge_idempotency`');
         $ok = parent::uninstall();
@@ -126,6 +192,14 @@ class Ucpbridge extends PaymentModule
             UNIQUE KEY `order_ref` (`order_ref`)
         ) ENGINE={$e} DEFAULT CHARSET=utf8mb4");
 
+        // Clients invités créés par le module (purge RGPD des invités sans commande).
+        $ok = $ok && Db::getInstance()->execute("CREATE TABLE IF NOT EXISTS `{$p}ucpbridge_customer` (
+            `id_customer` INT UNSIGNED NOT NULL,
+            `date_add` DATETIME NOT NULL,
+            PRIMARY KEY (`id_customer`),
+            KEY `date_add` (`date_add`)
+        ) ENGINE={$e} DEFAULT CHARSET=utf8mb4");
+
         return $ok && Db::getInstance()->execute("CREATE TABLE IF NOT EXISTS `{$p}ucpbridge_idempotency` (
             `idem_key` VARCHAR(255) NOT NULL,
             `request_hash` CHAR(64) NOT NULL,
@@ -137,26 +211,51 @@ class Ucpbridge extends PaymentModule
         ) ENGINE={$e} DEFAULT CHARSET=utf8mb4");
     }
 
-    private function installConfig()
+    /**
+     * Configuration d'une installation : valeur de chaque clé, ou fonction anonyme qui la calcule (secrets aléatoires,
+     * pages légales devinées). L'installation écrit tout ; la mise à jour ne crée que les clés absentes.
+     */
+    private function configDefaults()
     {
         // Clé API de la plateforme par défaut (Bearer) et secret HMAC des liens signés : générés à l'installation.
         // Chaque plateforme supplémentaire reçoit sa propre clé (configuration du module).
         // Le paiement de test reste désactivé tant que UCPBRIDGE_MOCK_SECRET est vide.
-        Configuration::deleteByName(UcpBridgeApiKeys::LEGACY);
-        $ok = Configuration::updateValue(UcpBridgeApiKeys::CONFIG, '{}')
-            && null !== UcpBridgeApiKeys::add(UcpBridgeApiKeys::DEFAULT_ID, UcpBridgeApiKeys::DEFAULT_LABEL)
-            && Configuration::updateValue('UCPBRIDGE_LINK_SECRET', bin2hex(random_bytes(32)))
-            && Configuration::updateValue('UCPBRIDGE_MOCK_SECRET', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_KEY', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_PK', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_API_BASE', UcpBridgeStripeProvider::DEFAULT_BASE)
-            && Configuration::updateValue('UCPBRIDGE_GPAY_MERCHANT_ID', '')
-            && Configuration::updateValue('UCPBRIDGE_OAUTH_CLIENTS', '{}')
-            && Configuration::updateValue('UCPBRIDGE_TERMS_REVIEW', 0);
+        $defaults = [
+            UcpBridgeApiKeys::CONFIG => function () {
+                return UcpBridgeApiKeys::encode(UcpBridgeApiKeys::initial(date('Y-m-d H:i:s')));
+            },
+            'UCPBRIDGE_LINK_SECRET' => function () {
+                return bin2hex(random_bytes(32));
+            },
+            'UCPBRIDGE_MOCK_SECRET' => '',
+            'UCPBRIDGE_STRIPE_KEY' => '',
+            'UCPBRIDGE_STRIPE_PK' => '',
+            'UCPBRIDGE_STRIPE_API_BASE' => UcpBridgeStripeProvider::DEFAULT_BASE,
+            'UCPBRIDGE_GPAY_MERCHANT_ID' => '',
+            'UCPBRIDGE_OAUTH_CLIENTS' => '{}',
+            'UCPBRIDGE_TERMS_REVIEW' => 0,
+            // 1 = supprimer journal de preuve, rétractations et journal des paiements à la désinstallation (0 = conserver).
+            'UCPBRIDGE_UNINSTALL_PURGE' => 0,
+        ] + UcpBridgeRetention::defaults(); // durées de conservation (jours) par catégorie
         // Pages légales devinées depuis la boutique (CGV : la page des conditions du tunnel de commande).
-        $map = UcpBridgeLegal::defaultMapping($this->legalPages(), (int) Configuration::get('PS_CONDITIONS_CMS_ID'));
         foreach (self::CMS_KEYS as $type => $key) {
-            $ok = $ok && Configuration::updateValue($key, (int) $map[$type]);
+            $defaults[$key] = function () use ($type) {
+                $map = UcpBridgeLegal::defaultMapping($this->legalPages(), (int) Configuration::get('PS_CONDITIONS_CMS_ID'));
+
+                return (int) $map[$type];
+            };
+        }
+
+        return $defaults;
+    }
+
+    private function installConfig()
+    {
+        // Clé unique des versions précédentes : remplacée par la plateforme par défaut de UCPBRIDGE_API_KEYS.
+        Configuration::deleteByName(UcpBridgeApiKeys::LEGACY);
+        $ok = true;
+        foreach ($this->configDefaults() as $key => $v) {
+            $ok = $ok && Configuration::updateValue($key, $v instanceof Closure ? $v() : $v);
         }
 
         return $ok;
@@ -444,9 +543,7 @@ class Ucpbridge extends PaymentModule
     /** Lien « Mes accès agents » sur la page Mon compte : liste et révocation des assistants reliés. */
     public function hookDisplayCustomerAccount($params)
     {
-        return '<a class="col-lg-4 col-md-6 col-sm-6 col-xs-12" id="ucpbridge-access-link" href="'
-            . htmlspecialchars($this->accessUrl(), ENT_QUOTES, 'UTF-8') . '"><span class="link-item">'
-            . '<i class="material-icons">link_off</i>Mes accès agents</span></a>';
+        return $this->renderTemplate('hook/customer_account.tpl', ['ucp_access_url' => $this->accessUrl()]);
     }
 
     /* ---------- Journal de preuve sur la fiche commande (back-office) ---------- */
@@ -458,9 +555,6 @@ class Ucpbridge extends PaymentModule
         if (!$p) {
             return '';
         }
-        $e = function ($v) {
-            return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
-        };
         $euros = function ($c) {
             return number_format(((int) $c) / 100, 2, ',', ' ') . ' €';
         };
@@ -476,18 +570,6 @@ class Ucpbridge extends PaymentModule
                 . (isset($p['api_ip']) && $acc['ip'] === $p['api_ip'] ? ' (MÊME IP que l\'appel API de l\'agent)' : '')
                 . '. Attention : preuve non nominative, la case peut avoir été cochée par l\'agent lui-même.'
             : 'non demandée (relecture désactivée)'];
-        $links = '';
-        foreach ((array) $p['links'] as $l) {
-            $links .= '<li>' . $e($l['type']) . ' : <a href="' . $e($l['url']) . '" target="_blank" rel="noopener">' . $e($l['title'] ?? $l['url']) . '</a></li>';
-        }
-        $disc = '';
-        foreach ((array) $p['disclosures'] as $d) {
-            $disc .= '<li>' . $e($d['code']) . ' : ' . $e($d['content']) . '</li>';
-        }
-        $tot = '';
-        foreach ((array) $p['totals'] as $t) {
-            $tot .= '<li>' . $e($t['display_text'] ?? $t['type']) . ' : ' . $e($euros($t['amount'])) . '</li>';
-        }
         $cons = [];
         foreach ((array) $p['consent'] as $k => $v) {
             $cons[] = $k . ' : ' . (null === $v ? 'non exprimé' : ($v ? 'oui' : 'non'));
@@ -495,206 +577,42 @@ class Ucpbridge extends PaymentModule
         $rows[] = ['Consentements (buyer_consent)', implode(' ; ', $cons)];
         $w = UcpBridgeProof::withdrawal($idOrder);
         $rows[] = ['Rétractation en ligne', $w ? 'demandée le ' . $w['date_add'] . ' (IP ' . $w['ip'] . ')' . ($w['email_sent'] ? ', accusé de réception envoyé' : '') : 'aucune demande'];
-        $html = '<div class="card mt-2" id="ucpbridge-proof"><div class="card-header"><h3 class="card-header-title">Preuve UCP : ce qui a été présenté à l\'acheteur</h3></div>'
-            . '<div class="card-body"><table class="table"><tbody>';
-        foreach ($rows as $r) {
-            $html .= '<tr><th style="width:30%">' . $e($r[0]) . '</th><td>' . $e($r[1]) . '</td></tr>';
+        $links = [];
+        foreach ((array) $p['links'] as $l) {
+            $links[] = ['type' => (string) $l['type'], 'url' => (string) $l['url'], 'title' => (string) ($l['title'] ?? $l['url'])];
         }
-        $html .= '<tr><th>Liens légaux</th><td><ul>' . $links . '</ul></td></tr>'
-            . '<tr><th>Mentions</th><td><ul>' . $disc . '</ul></td></tr>'
-            . '<tr><th>Totaux présentés</th><td><ul>' . $tot . '</ul></td></tr>'
-            . '</tbody></table></div></div>';
+        $disclosures = [];
+        foreach ((array) $p['disclosures'] as $d) {
+            $disclosures[] = ['code' => (string) $d['code'], 'content' => (string) $d['content']];
+        }
+        $totals = [];
+        foreach ((array) $p['totals'] as $t) {
+            $totals[] = ['label' => (string) ($t['display_text'] ?? $t['type']), 'amount' => $euros($t['amount'])];
+        }
 
-        return $html;
+        return $this->renderTemplate('hook/order_proof.tpl', [
+            'ucp_rows' => array_map(function ($r) {
+                return ['label' => $r[0], 'value' => (string) $r[1]];
+            }, $rows),
+            'ucp_links' => $links,
+            'ucp_disclosures' => $disclosures,
+            'ucp_totals' => $totals,
+        ]);
     }
 
-    /* ---------- Page de configuration ---------- */
-
-    /** Plateformes et clés API (mode invité) : ajout, régénération, suppression. */
-    private function processApiKeys()
+    /** Gabarit Smarty du module (views/templates/), variables assignées pour ce rendu seulement. */
+    public function renderTemplate($template, array $vars)
     {
-        $actions = ['submitUcpbridgeApiKeyAdd', 'submitUcpbridgeApiKeyRegen', 'submitUcpbridgeApiKeyDelete'];
-        if (!array_filter($actions, [Tools::class, 'isSubmit'])) {
-            return '';
-        }
-        if (!hash_equals($this->configToken(), (string) Tools::getValue('ucp_csrf'))) {
-            return $this->displayError('Jeton de sécurité invalide : clés API inchangées.');
-        }
-        $id = (string) Tools::getValue('api_key_id');
-        if (Tools::isSubmit('submitUcpbridgeApiKeyDelete')) {
-            UcpBridgeApiKeys::remove($id);
+        $tpl = $this->context->smarty->createTemplate($this->getLocalPath() . 'views/templates/' . $template, $this->context->smarty);
+        $tpl->assign($vars);
 
-            return $this->displayConfirmation('Clé de la plateforme « ' . $id . ' » supprimée : elle est refusée dès maintenant.');
-        }
-        $key = Tools::isSubmit('submitUcpbridgeApiKeyAdd')
-            ? UcpBridgeApiKeys::add($id, (string) Tools::getValue('api_key_label'))
-            : UcpBridgeApiKeys::regenerate($id);
-        if (null === $key) {
-            return $this->displayError('Identifiant de plateforme invalide ou déjà utilisé (minuscules, chiffres, - et _, 32 caractères au plus).');
-        }
-
-        return $this->displayConfirmation('Clé de la plateforme « ' . $id . ' » : ' . $key . ' (à transmettre à cette plateforme seulement)');
+        return $tpl->fetch();
     }
 
-    private function apiKeysPanel(callable $esc)
-    {
-        $csrf = '<input type="hidden" name="ucp_csrf" value="' . $esc($this->configToken()) . '">';
-        $rows = '';
-        foreach (UcpBridgeApiKeys::all() as $id => $k) {
-            $rows .= '<tr><td><code>' . $esc($id) . '</code></td><td>' . $esc($k['label'] ?? '') . '</td><td><code>' . $esc($k['key'] ?? '')
-                . '</code></td><td>' . $esc($k['date_add'] ?? '') . '</td><td><form method="post" class="form-inline">' . $csrf
-                . '<input type="hidden" name="api_key_id" value="' . $esc($id) . '">'
-                . '<button class="btn btn-default" name="submitUcpbridgeApiKeyRegen" value="1">Régénérer</button> '
-                . '<button class="btn btn-default" name="submitUcpbridgeApiKeyDelete" value="1" '
-                . 'onclick="return confirm(\'Supprimer la clé de cette plateforme ?\')">Supprimer</button></form></td></tr>';
-        }
-
-        return '<h4>Plateformes (clés API, en-tête Authorization: Bearer)</h4>'
-            . '<p>Une clé par plateforme : chaque plateforme ne voit que ses propres paniers, sessions de caisse et commandes, '
-            . 'et ses clés d\'idempotence ne se mélangent pas à celles des autres. Ne jamais remettre la même clé à deux plateformes.</p>'
-            . ($rows ? '<table class="table"><thead><tr><th>Identifiant</th><th>Plateforme</th><th>Clé API</th><th>Créée le</th><th></th></tr></thead><tbody>'
-                . $rows . '</tbody></table>' : '<p>Aucune clé : le mode invité est fermé.</p>')
-            . '<form method="post" class="form-inline">' . $csrf
-            . '<input type="text" class="form-control" name="api_key_id" placeholder="identifiant (ex. google)" pattern="[a-z0-9][a-z0-9_-]{0,31}"> '
-            . '<input type="text" class="form-control" name="api_key_label" placeholder="nom affiché"> '
-            . '<button class="btn btn-default" name="submitUcpbridgeApiKeyAdd" value="1">Ajouter une plateforme</button></form>';
-    }
-
-    /** Accès agents actifs (jetons OAuth non révoqués et non expirés), révocables par le marchand. */
-    private function grantsPanel(callable $esc)
-    {
-        $rows = '';
-        foreach (UcpBridgeOAuth::grants() as $g) {
-            $rows .= '<tr><td>' . $esc($g['client_name']) . ' <code>' . $esc($g['client_id']) . '</code></td><td>' . $esc($g['email'])
-                . '</td><td>' . $esc($g['first_grant']) . '</td><td>' . $esc($g['expires_at']) . '</td><td><form method="post">'
-                . '<input type="hidden" name="ucp_csrf" value="' . $esc($this->configToken()) . '">'
-                . '<input type="hidden" name="revoke_client" value="' . $esc($g['client_id']) . '">'
-                . '<input type="hidden" name="revoke_customer" value="' . (int) $g['id_customer'] . '">'
-                . '<button class="btn btn-default" name="submitUcpbridgeRevoke" value="1">Révoquer</button></form></td></tr>';
-        }
-
-        return '<h4>Accès agents actifs</h4>' . ($rows
-            ? '<table class="table"><thead><tr><th>Assistant</th><th>Client</th><th>Relié le</th><th>Valable jusqu\'au</th><th></th></tr></thead><tbody>'
-                . $rows . '</tbody></table>'
-            : '<p>Aucun assistant relié à un compte client.</p>');
-    }
-
-    /** Rapprochement des sessions bloquées (processus interrompu pendant la finalisation). */
-    private function reconcilePanel(callable $esc)
-    {
-        $n = (int) Db::getInstance()->getValue('SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'ucpbridge_session` WHERE kind = \'checkout\'
-            AND status IN (\'complete_in_progress\', \'reconciling\', \'updating\') AND date_upd < \''
-            . pSQL(date('Y-m-d H:i:s', time() - 60 * self::RECONCILE_MINUTES)) . '\'');
-
-        return '<h4>Rapprocher les sessions bloquées</h4><p>Sessions réservées depuis plus de ' . self::RECONCILE_MINUTES . ' minutes : <strong>'
-            . $n . '</strong>. Commande trouvée : session terminée ; débit sans commande : remboursement et incident ; '
-            . 'débit incertain : incident à vérifier chez le prestataire ; aucun débit : session rendue. '
-            . 'À planifier aussi en ligne de commande : <code>php modules/ucpbridge/bin/reconcile.php --minutes=15</code>.</p>'
-            . '<form method="post" class="form-inline"><input type="hidden" name="ucp_csrf" value="' . $esc($this->configToken()) . '">'
-            . '<label>Bloquées depuis plus de <input type="number" min="1" class="form-control" style="width:80px;display:inline-block" '
-            . 'name="reconcile_minutes" value="' . self::RECONCILE_MINUTES . '"> minutes</label> '
-            . '<button class="btn btn-default" name="submitUcpbridgeReconcile" value="1">Rapprocher les sessions bloquées</button></form>';
-    }
-
-    private function configToken()
-    {
-        return hash_hmac('sha256', 'bo-config|' . (int) $this->context->employee->id, (string) Configuration::get('UCPBRIDGE_LINK_SECRET'));
-    }
+    /* ---------- Page de configuration (voir UcpBridgeConfigPage) ---------- */
 
     public function getContent()
     {
-        $out = '';
-        if (Tools::isSubmit('submitUcpbridgeReconcile')) {
-            if (!hash_equals($this->configToken(), (string) Tools::getValue('ucp_csrf'))) {
-                $out .= $this->displayError('Jeton de sécurité invalide : rapprochement non effectué.');
-            } else {
-                $minutes = max(1, (int) Tools::getValue('reconcile_minutes', self::RECONCILE_MINUTES));
-                $done = (new UcpBridgeCart($this->context, $this))->reconcile($minutes);
-                $lines = '';
-                foreach ($done as $d) {
-                    $lines .= '<li><code>' . htmlspecialchars($d[0], ENT_QUOTES, 'UTF-8') . '</code> : ' . htmlspecialchars($d[1], ENT_QUOTES, 'UTF-8') . '</li>';
-                }
-                $out .= $this->displayConfirmation('Rapprochement effectué : ' . count($done) . ' session(s) traitée(s).')
-                    . ($lines ? '<ul>' . $lines . '</ul>' : '');
-            }
-        }
-        if (Tools::isSubmit('submitUcpbridgeRevoke')) {
-            if (!hash_equals($this->configToken(), (string) Tools::getValue('ucp_csrf'))) {
-                $out .= $this->displayError('Jeton de sécurité invalide : révocation non effectuée.');
-            } else {
-                UcpBridgeOAuth::revokeAllFor((string) Tools::getValue('revoke_client'), (int) Tools::getValue('revoke_customer'));
-                $out .= $this->displayConfirmation('Accès révoqué.');
-            }
-        }
-        $out .= $this->processApiKeys();
-        if (Tools::isSubmit('submitUcpbridge')) {
-            if (!hash_equals($this->configToken(), (string) Tools::getValue('ucp_csrf'))) {
-                $out .= $this->displayError('Jeton de sécurité invalide : configuration non enregistrée.');
-            } else {
-                Configuration::updateValue('UCPBRIDGE_MOCK_SECRET', trim((string) Tools::getValue('UCPBRIDGE_MOCK_SECRET')));
-                foreach (['UCPBRIDGE_STRIPE_PK', 'UCPBRIDGE_GPAY_MERCHANT_ID'] as $k) {
-                    Configuration::updateValue($k, trim((string) Tools::getValue($k)));
-                }
-                // Clé secrète jamais réaffichée : champ vide = clé inchangée, « - » = clé effacée.
-                $sk = trim((string) Tools::getValue('UCPBRIDGE_STRIPE_KEY'));
-                if ('-' === $sk) {
-                    Configuration::updateValue('UCPBRIDGE_STRIPE_KEY', '');
-                } elseif ('' !== $sk) {
-                    Configuration::updateValue('UCPBRIDGE_STRIPE_KEY', $sk);
-                }
-                $pages = $this->legalPages();
-                foreach (self::CMS_KEYS as $key) {
-                    $id = (int) Tools::getValue($key);
-                    Configuration::updateValue($key, isset($pages[$id]) ? $id : 0);
-                }
-                Configuration::updateValue('UCPBRIDGE_TERMS_REVIEW', Tools::getValue('UCPBRIDGE_TERMS_REVIEW') ? 1 : 0);
-                $out .= $this->displayConfirmation('Configuration enregistrée.');
-            }
-        }
-        $base = $this->context->link->getBaseLink();
-        $esc = function ($v) {
-            return htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
-        };
-        $field = function ($name, $label) use ($esc) {
-            return '<p><label>' . $esc($label) . '</label><br><input type="text" class="form-control" name="' . $esc($name)
-                . '" value="' . $esc(Configuration::get($name)) . '"></p>';
-        };
-        $labels = ['terms_of_service' => 'Conditions générales de vente (terms_of_service)', 'privacy_policy' => 'Confidentialité (privacy_policy)',
-            'refund_policy' => 'Retours et rétractation (refund_policy)', 'shipping_policy' => 'Livraison (shipping_policy)'];
-        $pages = $this->legalPages();
-        $selects = '';
-        foreach (self::CMS_KEYS as $type => $key) {
-            $current = (int) Configuration::get($key);
-            $opts = '<option value="0"' . (0 === $current ? ' selected' : '') . '>(aucune)</option>';
-            foreach ($pages as $id => $pg) {
-                $opts .= '<option value="' . (int) $id . '"' . ($id === $current ? ' selected' : '') . '>' . $esc($pg['title'])
-                    . ($pg['active'] ? '' : ' (inactive)') . '</option>';
-            }
-            $selects .= '<p><label>' . $esc($labels[$type]) . '</label><br><select class="form-control" name="' . $esc($key) . '">' . $opts . '</select></p>';
-        }
-        $out .= '<div class="panel"><h3>' . $esc(self::DISPLAY_NAME) . '</h3>'
-            . '<div class="alert alert-warning">Prototype de démonstration : ne pas utiliser en production.</div>'
-            . '<p>Profil : <code>' . $esc($base) . '.well-known/ucp</code><br>API REST : <code>' . $esc($base) . 'ucp/v1</code><br>'
-            . 'MCP : <code>' . $esc($base) . 'ucp/v1/mcp</code></p>'
-            . '<form method="post">'
-            . '<input type="hidden" name="ucp_csrf" value="' . $esc($this->configToken()) . '">'
-            . '<h4>Liens légaux (links) et CGV</h4>' . $selects
-            . '<p><label><input type="checkbox" name="UCPBRIDGE_TERMS_REVIEW" value="1"' . (Configuration::get('UCPBRIDGE_TERMS_REVIEW') ? ' checked' : '') . '> '
-            . 'Relecture des CGV chez le marchand : une session sans acceptation passe en requires_buyer_review (page signée avec case à cocher)</label></p>'
-            . '<h4>Paiement de test</h4>'
-            . $field('UCPBRIDGE_MOCK_SECRET', 'Secret de simulation du paiement de test (vide = paiement de test désactivé)')
-            . '<h4>Google Pay (com.google.pay, passerelle Stripe, environnement TEST)</h4>'
-            . '<p><label>Clé secrète Stripe de test (sk_test_... ; les clés live sont refusées). '
-            . (Configuration::get('UCPBRIDGE_STRIPE_KEY') ? 'Une clé est enregistrée : laisser vide pour la conserver, « - » pour l\'effacer.' : 'Aucune clé : Google Pay désactivé.')
-            . '</label><br><input type="password" class="form-control" name="UCPBRIDGE_STRIPE_KEY" value="" autocomplete="off"></p>'
-            . $field('UCPBRIDGE_STRIPE_PK', 'Clé publiable Stripe (pk_test_...)')
-            . '<p>URL de l\'API Stripe : <code>' . $esc(Configuration::get('UCPBRIDGE_STRIPE_API_BASE')) . '</code> (modifiable par script uniquement, pour le banc d\'essai)</p>'
-            . $field('UCPBRIDGE_GPAY_MERCHANT_ID', 'Google Pay merchant_id (test)')
-            . '<h4>Identity linking (OAuth 2.0)</h4><p>Clients enregistrés : <code>'
-            . $esc(implode(', ', array_keys(UcpBridgeOAuth::clients())) ?: 'aucun') . '</code> (enregistrement par script, secret affiché une seule fois)</p>'
-            . '<button class="btn btn-primary" name="submitUcpbridge" value="1">Enregistrer</button></form>'
-            . $this->apiKeysPanel($esc) . $this->grantsPanel($esc) . $this->reconcilePanel($esc) . '</div>';
-
-        return $out;
+        return (new UcpBridgeConfigPage($this, $this->context))->content();
     }
 }

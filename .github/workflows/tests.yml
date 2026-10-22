@@ -1,0 +1,169 @@
+# Intégration continue du module ucpbridge : lint PHP, tests unitaires PHPUnit, puis suite d'intégration
+# (pytest + Playwright) contre le banc docker compose (PrestaShop 9.1.5, MySQL, stripe-mock, mailpit).
+# Aucun secret requis : tout tourne en local sur le runner, rien ne sort vers un service réel.
+#
+# Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE.
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint-unitaires:
+    name: Lint PHP et unitaires (PHP ${{ matrix.php }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.3 : minimum de PHPUnit 12 ; 8.5 : version de l'image prestashop/prestashop:9.1.5 du banc.
+        php: ["8.3", "8.5"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+
+      - name: Cache PHPUnit
+        uses: actions/cache@v6
+        with:
+          path: tools/phpunit.phar
+          key: phpunit-${{ hashFiles('tools/get-phpunit.sh') }}
+
+      - name: PHPUnit épinglé (somme SHA-256 vérifiée)
+        run: ./tools/get-phpunit.sh
+
+      - name: Lint PHP (php -l)
+        # Échec sur erreur de syntaxe ; les dépréciations (PHP 8.4 et plus) remontent en avertissements.
+        run: |
+          set +e
+          find ucpbridge -name '*.php' -print0 | xargs -0 -n1 php -l > lint.log 2>&1
+          statut=$?
+          grep -E '^Deprecated' lint.log | sort -u | sed 's/^/::warning::/'
+          if [ "$statut" -ne 0 ]; then
+            grep -Ev '^No syntax errors|^$|Deprecated' lint.log; echo "::error::erreurs de syntaxe PHP"; exit 1
+          fi
+          echo "$(grep -c '^No syntax errors' lint.log) fichiers PHP sans erreur de syntaxe"
+
+      - name: Tests unitaires (PHPUnit)
+        working-directory: ucpbridge/tests
+        run: php ../../tools/phpunit.phar
+
+      - name: Archive installable (contrôle des tirets cadratins compris)
+        run: ./build-zip.sh
+
+      - name: Archive en artefact
+        if: matrix.php == '8.5'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ucpbridge-zip
+          path: dist/*.zip
+          retention-days: 14
+
+  integration:
+    name: Intégration (banc docker, pytest et Playwright)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      UCP_PROJECT: ucpbridge-ci
+      UCP_PORT: "8092"
+      # Sous Linux, la boutique joint le faux Stripe du test_08 par la passerelle docker (host-gateway).
+      FAUX_STRIPE_HOTE: 0.0.0.0
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.cache/ms-playwright
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Cache des images docker du banc
+        id: images
+        uses: actions/cache@v6
+        with:
+          path: .cache/images.tar
+          key: images-${{ hashFiles('docker-compose.yml') }}
+
+      - name: Images docker (cache ou téléchargement)
+        run: |
+          if [ -f .cache/images.tar ]; then
+            docker load -i .cache/images.tar
+          else
+            docker compose pull --quiet
+            mkdir -p .cache
+            docker save -o .cache/images.tar $(docker compose config --images)
+          fi
+
+      - name: Démarrage du banc (installation de PrestaShop en arrière-plan)
+        run: docker compose -p "$UCP_PROJECT" up -d mysql prestashop stripe-mock mailpit
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/requirements.txt
+
+      - name: Dépendances Python des tests
+        run: python -m pip install -r tests/requirements.txt
+
+      - name: Cache des navigateurs Playwright
+        id: navigateurs
+        uses: actions/cache@v6
+        with:
+          path: .cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('tests/requirements.txt') }}
+
+      - name: Chromium pour Playwright
+        run: |
+          if [ "${{ steps.navigateurs.outputs.cache-hit }}" = "true" ]; then
+            python -m playwright install-deps chromium
+          else
+            python -m playwright install --with-deps chromium
+          fi
+
+      # Node 22 pour l'inspecteur officiel MCP (npx), lancé par tests/test_03_mcp.py.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Cache npm (inspecteur MCP)
+        uses: actions/cache@v6
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('tests/test_03_mcp.py') }}
+
+      - name: PHPUnit épinglé (somme SHA-256 vérifiée)
+        run: ./tools/get-phpunit.sh
+
+      - name: Suite complète (run-tests.sh)
+        run: ./run-tests.sh -rfE --junitxml=../test-logs/junit.xml
+
+      - name: Journaux en cas d'échec
+        if: failure()
+        run: |
+          mkdir -p test-logs
+          docker compose -p "$UCP_PROJECT" ps -a > test-logs/docker-ps.txt 2>&1 || true
+          docker compose -p "$UCP_PROJECT" logs --no-color --timestamps > test-logs/docker.log 2>&1 || true
+          docker cp "$UCP_PROJECT-prestashop-1:/var/www/html/var/logs" test-logs/prestashop-var-logs 2>/dev/null || true
+          mkdir -p test-logs/captures && cp capture-*.png mcp-*-sortie.txt test-logs/captures/ 2>/dev/null || true
+          for f in install unit integration; do
+            [ -f "test-logs/$f.log" ] && { echo "::group::test-logs/$f.log"; tail -n 200 "test-logs/$f.log"; echo "::endgroup::"; }
+          done
+          exit 0
+
+      - name: Artefact des journaux
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: journaux-integration
+          path: test-logs/
+          retention-days: 14

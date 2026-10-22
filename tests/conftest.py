@@ -22,9 +22,10 @@ import pytest
 BASE = os.environ.get("UCP_BASE", "http://localhost:8092")
 ICI = os.path.dirname(os.path.abspath(__file__))
 BANC = os.path.dirname(ICI)
-MYSQL = ["docker", "exec", "bench-ucp-bridge-mysql-1", "mysql", "-uroot", "-pbench",
+PROJET = os.environ.get("UCP_PROJECT", "bench-ucp-bridge")  # nom du projet docker compose du banc
+MYSQL = ["docker", "exec", f"{PROJET}-mysql-1", "mysql", "-uroot", "-pbench",
          "--default-character-set=utf8mb4", "prestashop", "-N", "-B", "-e"]
-PS = "bench-ucp-bridge-prestashop-1"
+PS = f"{PROJET}-prestashop-1"
 AGENT = 'profile="https://agent.contrib.test/.well-known/ucp"; version="2026-04-08"'
 CLIENT_ID = "google-agent-test"
 REDIRECT = "http://localhost:8765/callback"
@@ -63,7 +64,9 @@ def cle_api(plateforme="default"):
 
 def php(code):
     """Exécute du PHP dans le conteneur de la boutique, PrestaShop chargé."""
-    script = "<?php define('_PS_ADMIN_DIR_', '/var/www/html/admin'); require '/var/www/html/config/config.inc.php';\n" + code
+    # Vrai dossier d'administration : le back-office (HelperForm) y trouve les gabarits du thème d'administration.
+    script = (f"<?php define('_PS_ADMIN_DIR_', '/var/www/html/{admin_dir()}'); require '/var/www/html/config/config.inc.php';\n"
+              + code)
     r = subprocess.run(["docker", "exec", "-i", "-u", "www-data", PS, "php"], input=script, capture_output=True, text=True)
     return r.stdout.strip()
 
@@ -271,9 +274,19 @@ def set_config(nom, valeur):
     php(f"Configuration::updateValue({json.dumps(nom)}, {json.dumps(str(valeur))});")
 
 
+_ADMIN_DIR = []
+
+
 def admin_dir():
+    """Dossier d'administration, relu tant qu'il s'appelle encore « admin » : PrestaShop 8 le renomme (admin + suffixe
+    aléatoire) à la première ouverture de la page de connexion. Le nom définitif est ensuite gardé en mémoire."""
+    if _ADMIN_DIR:
+        return _ADMIN_DIR[0]
     r = subprocess.run(["docker", "exec", PS, "sh", "-c", "ls -d /var/www/html/admin* | grep -v admin-api"], capture_output=True, text=True)
-    return os.path.basename(r.stdout.strip())
+    nom = os.path.basename(r.stdout.strip())
+    if nom != "admin":
+        _ADMIN_DIR.append(nom)
+    return nom
 
 
 def admin_login(page):
@@ -281,7 +294,10 @@ def admin_login(page):
     page.fill("#email", ADMIN_EMAIL)
     page.fill("#passwd", ADMIN_MDP)
     page.click("#submit_login")
-    page.wait_for_load_state("networkidle")
+    # Connexion en AJAX puis redirection vers le tableau de bord. Pas d'attente « networkidle » : le tableau de bord de
+    # PrestaShop 9.2 interroge le serveur en continu et n'est jamais au repos.
+    page.wait_for_url(lambda u: "AdminLogin" not in u, timeout=30000)
+    page.wait_for_load_state("load")
 
 
 def mails(destinataire):

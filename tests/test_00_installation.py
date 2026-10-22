@@ -7,7 +7,10 @@ import subprocess
 from conftest import BASE, PS, appel, cle_api, config, sql, sql_val
 
 TABLES = ["ucpbridge_session", "ucpbridge_idempotency", "ucpbridge_oauth_code", "ucpbridge_oauth_token",
-          "ucpbridge_proof", "ucpbridge_withdrawal", "ucpbridge_payment", "ucpbridge_oauth_revocation"]
+          "ucpbridge_proof", "ucpbridge_withdrawal", "ucpbridge_payment", "ucpbridge_oauth_revocation",
+          "ucpbridge_customer"]
+# Conservées à la désinstallation (#12), avec la liste des invités créés par le module (#13, purge RGPD).
+PREUVES = ["ucpbridge_proof", "ucpbridge_withdrawal", "ucpbridge_payment", "ucpbridge_customer"]
 HOOKS = ["moduleRoutes", "actionHtaccessCreate", "displayAdminOrderMain", "actionEmailAddAfterContent",
          "actionGetExtraMailTemplateVars", "displayCustomerAccount"]
 
@@ -31,7 +34,9 @@ def test_desinstallation_puis_reinstallation():
     r = console("prestashop:module", "uninstall", "ucpbridge")
     assert r.returncode == 0, r.stdout + r.stderr
     tables, nb_config, hooks, hook_ext, htaccess = etat()
-    assert tables == [] and nb_config == 0 and hooks == [] and hook_ext == "0" and htaccess == "0"
+    # Journal de preuve, rétractations et journal des paiements conservés par défaut (#12) ; tout le reste supprimé.
+    assert sorted(tables) == sorted("ps_" + t for t in PREUVES)
+    assert nb_config == 0 and hooks == [] and hook_ext == "0" and htaccess == "0"
     assert sql_val("SELECT COUNT(*) FROM ps_module WHERE name='ucpbridge'") == "0"
     assert appel("GET", f"{BASE}/.well-known/ucp").code in (404, 302, 301)
 

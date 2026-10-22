@@ -10,7 +10,7 @@ import subprocess
 import threading
 import time
 
-from conftest import BASE, CLIENT_ID, M_BLANC, PS, appel, secret_client_test, sql, sql_val
+from conftest import BASE, CLIENT_ID, M_BLANC, PS, admin_dir, appel, secret_client_test, sql, sql_val
 from test_04_relecture import complete, id_cart, id_client_demo, ouvrir_lien
 
 
@@ -261,9 +261,9 @@ def test_ib_reservation_sans_debit_rendue_et_bouton_back_office(boutique):
     sql(f"UPDATE ps_ucpbridge_session SET status='complete_in_progress' WHERE id_session='{sid}'")
     vieillir(sid)
     html = subprocess.run(["docker", "exec", "-i", "-u", "www-data", PS, "php"], capture_output=True, text=True, input=(
-        "<?php define('_PS_ADMIN_DIR_', '/var/www/html/admin'); require '/var/www/html/config/config.inc.php';\n"
+        f"<?php define('_PS_ADMIN_DIR_', '/var/www/html/{admin_dir()}'); require '/var/www/html/config/config.inc.php';\n"
         "Context::getContext()->employee = new Employee(1); $m = Module::getInstanceByName('ucpbridge'); $h = $m->getContent();\n"
-        "preg_match('/name=\"ucp_csrf\" value=\"([0-9a-f]+)\"/', $h, $t);\n"
+        "preg_match('/name=\"ucp_csrf\"[^>]*value=\"([0-9a-f]+)\"/', $h, $t);\n"
         "$_POST = ['submitUcpbridgeReconcile' => '1', 'ucp_csrf' => $t[1]]; echo $m->getContent();")).stdout
     assert "Rapprocher les sessions bloquées" in html
     assert statut(sid) == "ready_for_complete"

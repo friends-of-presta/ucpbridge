@@ -258,7 +258,7 @@ def test_i2_liste_et_revocation_cote_marchand(boutique):
     acces = jeton_direct()
     html = php("Context::getContext()->employee = new Employee(1); echo Module::getInstanceByName('ucpbridge')->getContent();")
     assert "Accès agents actifs" in html and CLIENT_ID in html
-    jeton_bo = re.search(r'name="ucp_csrf" value="([0-9a-f]+)"', html).group(1)
+    jeton_bo = re.search(r'name="ucp_csrf"[^>]*value="([0-9a-f]+)"', html).group(1)
     php("Context::getContext()->employee = new Employee(1); "
         f"$_POST = ['submitUcpbridgeRevoke' => '1', 'ucp_csrf' => '{jeton_bo}', 'revoke_client' => {json.dumps(CLIENT_ID)}, "
         f"'revoke_customer' => '{id_client_demo()}']; echo Module::getInstanceByName('ucpbridge')->getContent();")

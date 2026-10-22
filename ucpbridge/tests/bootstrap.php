@@ -6,7 +6,8 @@
  */
 define('_PS_VERSION_', 'tests');
 foreach (['UcpBridgeItemRef', 'UcpBridgeTotals', 'UcpBridgeIdempotency', 'UcpBridgeSigner', 'UcpBridgePkce',
-    'UcpBridgeConsent', 'UcpBridgeLegal', 'UcpBridgeMcp'] as $c) {
+    'UcpBridgeConsent', 'UcpBridgeLegal', 'UcpBridgeMcp', 'UcpBridgeSchema', 'UcpBridgeExport', 'UcpBridgeRetention',
+    'cart/UcpBridgeMessage'] as $c) {
     if (is_file($f = __DIR__ . '/../classes/' . $c . '.php')) {
         require_once $f;
     }

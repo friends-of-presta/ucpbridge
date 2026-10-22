@@ -92,7 +92,7 @@ def test_migration_de_la_cle_unique(boutique):
 def back_office(post=None):
     code = "Context::getContext()->employee = new Employee(1); $m = Module::getInstanceByName('ucpbridge');\n"
     if post is not None:
-        code += ("$h = $m->getContent(); preg_match('/name=\"ucp_csrf\" value=\"([0-9a-f]+)\"/', $h, $t);\n"
+        code += ("$h = $m->getContent(); preg_match('/name=\"ucp_csrf\"[^>]*value=\"([0-9a-f]+)\"/', $h, $t);\n"
                  f"$_POST = json_decode({json.dumps(json.dumps(post))}, true);\n"
                  "if (($_POST['ucp_csrf'] ?? '') === 'JETON') { $_POST['ucp_csrf'] = $t[1]; }\n")
     return php(code + "echo $m->getContent();")
@@ -128,4 +128,13 @@ def test_back_office_ajout_regeneration_suppression(boutique):
     finally:
         supprimer("bo-test")
     # La plateforme par défaut n'a pas bougé.
+    assert cle_api() == boutique.cle
+
+
+def test_back_office_identifiant_echappe_dans_la_confirmation(boutique):
+    """Relecture M2 : l'identifiant de plateforme reçu en POST est échappé dans le message de confirmation."""
+    piege = '<img src=x onerror="alert(1)">'
+    html = back_office({"submitUcpbridgeApiKeyDelete": "1", "ucp_csrf": "JETON", "api_key_id": piege})
+    assert "alert-success" in html, html[-2000:]
+    assert piege not in html and "&lt;img src=x" in html
     assert cle_api() == boutique.cle
