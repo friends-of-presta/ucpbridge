@@ -1,0 +1,4 @@
+# Dépendances des tests d'intégration (pytest + Playwright), versions épinglées pour l'intégration continue.
+# Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE.
+pytest==8.4.2
+playwright==1.60.0

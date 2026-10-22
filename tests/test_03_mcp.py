@@ -133,7 +133,7 @@ def test_inspecteur_officiel_mcp(boutique):
     def inspecteur(*args, affiche):
         r = subprocess.run(base + list(args), capture_output=True, text=True, timeout=300)
         assert r.returncode == 0, r.stderr[-2000:]
-        journal.append("$ npx " + INSPECTEUR + " --cli http://localhost:8092/ucp/v1/mcp --transport http "
+        journal.append("$ npx " + INSPECTEUR + f" --cli {BASE}/ucp/v1/mcp --transport http "
                        "--header 'Authorization: Bearer <clé API>' " + " ".join(a if " " not in a else f"'{a}'" for a in args))
         doc = json.loads(r.stdout)
         journal.append(json.dumps(affiche(doc), ensure_ascii=False, indent=1) + "\n")

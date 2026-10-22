@@ -22,9 +22,10 @@ import pytest
 BASE = os.environ.get("UCP_BASE", "http://localhost:8092")
 ICI = os.path.dirname(os.path.abspath(__file__))
 BANC = os.path.dirname(ICI)
-MYSQL = ["docker", "exec", "bench-ucp-bridge-mysql-1", "mysql", "-uroot", "-pbench",
+PROJET = os.environ.get("UCP_PROJECT", "bench-ucp-bridge")  # nom du projet docker compose du banc
+MYSQL = ["docker", "exec", f"{PROJET}-mysql-1", "mysql", "-uroot", "-pbench",
          "--default-character-set=utf8mb4", "prestashop", "-N", "-B", "-e"]
-PS = "bench-ucp-bridge-prestashop-1"
+PS = f"{PROJET}-prestashop-1"
 AGENT = 'profile="https://agent.contrib.test/.well-known/ucp"; version="2026-04-08"'
 CLIENT_ID = "google-agent-test"
 REDIRECT = "http://localhost:8765/callback"

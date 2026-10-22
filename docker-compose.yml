@@ -1,6 +1,8 @@
-name: bench-ucp-bridge
+name: ${UCP_PROJECT:-bench-ucp-bridge}
 # Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast Contrib. Licence AFL-3.0 (Academic Free License 3.0), voir LICENSE.
-# Banc UCP n°3 : prototype ucpbridge (podcast Contrib.), port 8092
+# Banc UCP n°3 : prototype ucpbridge (podcast Contrib.), port 8092.
+# Ports et nom de projet réglables (banc parallèle, intégration continue) : UCP_PROJECT, UCP_PORT,
+# STRIPE_MOCK_PORT, MAILPIT_PORT. Sans variable, valeurs historiques ci-dessous.
 services:
   mysql:
     image: mysql:8.0
@@ -18,26 +20,29 @@ services:
       DB_USER: root
       DB_PASSWD: bench
       PS_INSTALL_AUTO: 1
-      PS_DOMAIN: localhost:8092
+      PS_DOMAIN: localhost:${UCP_PORT:-8092}
       PS_LANGUAGE: fr
       PS_COUNTRY: FR
       PS_DEV_MODE: 0
       ADMIN_MAIL: demo@contrib.test
       ADMIN_PASSWD: ContribBench2026
     ports:
-      - "8092:80"
+      - "${UCP_PORT:-8092}:80"
+    # Faux Stripe des tests (test_08) lancé sur l'hôte : nom déjà résolu par Docker Desktop, à déclarer sous Linux.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ps:/var/www/html
   # Faux Stripe local (image officielle) : aucune vraie carte, aucun appel vers api.stripe.com.
   stripe-mock:
     image: stripe/stripe-mock:latest
     ports:
-      - "12111:12111"
+      - "${STRIPE_MOCK_PORT:-12111}:12111"
   # Capteur d'e-mails local : SMTP 1025 (réseau du banc), interface web http://localhost:8025. Rien ne sort.
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
-      - "8025:8025"
+      - "${MAILPIT_PORT:-8025}:8025"
 volumes:
   db:
   ps:

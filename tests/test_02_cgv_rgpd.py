@@ -11,7 +11,7 @@ import uuid
 
 import pytest
 
-from conftest import (BANC, BASE, BUYER, DEST_FR, M_BLANC, admin_dir, admin_login, appel, id_commande, attendre_mails, config, mail, php,
+from conftest import (BANC, BASE, BUYER, DEST_FR, MAILPIT, M_BLANC, admin_dir, admin_login, appel, id_commande, attendre_mails, config, mail, php,
                       set_config, sql, sql_val, total)
 
 TYPES = ["terms_of_service", "privacy_policy", "refund_policy", "shipping_policy"]
@@ -252,7 +252,7 @@ def test_email_de_confirmation_et_retractation(boutique):
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1200, "height": 1000})
-        page.goto(f"http://localhost:8025/view/{conf[0]['ID']}.html")
+        page.goto(f"{MAILPIT}/view/{conf[0]['ID']}.html")
         page.wait_for_load_state("networkidle")
         page.screenshot(path=os.path.join(BANC, "capture-mail-confirmation.png"), full_page=True)
         page.get_by_text("Informations légales").scroll_into_view_if_needed()
