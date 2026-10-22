@@ -4,3 +4,7 @@ test-logs/
 __pycache__/
 .pytest_cache/
 .DS_Store
+tools/*.tmp
+# Sorties des tests d'intégration (captures Playwright, journaux MCP)
+capture-*.png
+mcp-*-sortie.txt

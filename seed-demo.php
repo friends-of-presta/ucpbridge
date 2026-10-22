@@ -78,7 +78,11 @@ if (!$idGroup) {
 }
 Db::getInstance()->update('product', ['id_tax_rules_group' => $idGroup]);
 Db::getInstance()->update('product_shop', ['id_tax_rules_group' => $idGroup]);
-Db::getInstance()->update('carrier', ['id_tax_rules_group' => $idGroup], 'deleted = 0');
+// Colonne carrier.id_tax_rules_group : présente en PrestaShop 9 seulement (PrestaShop 8 ne connaît que la table
+// carrier_tax_rules_group_shop, remplie juste après).
+if (Db::getInstance()->executeS('SHOW COLUMNS FROM `' . _DB_PREFIX_ . 'carrier` LIKE \'id_tax_rules_group\'')) {
+    Db::getInstance()->update('carrier', ['id_tax_rules_group' => $idGroup], 'deleted = 0');
+}
 Db::getInstance()->execute('DELETE FROM ' . _DB_PREFIX_ . 'carrier_tax_rules_group_shop');
 foreach (Db::getInstance()->executeS('SELECT id_carrier FROM ' . _DB_PREFIX_ . 'carrier WHERE deleted = 0') as $c) {
     Db::getInstance()->insert('carrier_tax_rules_group_shop', ['id_carrier' => (int) $c['id_carrier'], 'id_tax_rules_group' => $idGroup, 'id_shop' => 1]);

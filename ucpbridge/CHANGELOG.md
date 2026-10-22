@@ -4,6 +4,56 @@ Copyright (c) 2026 Friends of Presta. Auteur : Christophe Vidal, pour le podcast
 
 ## 0.1.3-beta (non publiée)
 
+Nouveautés
+
+- Mise à jour sans désinstallation (#11) : scripts `upgrade/upgrade-X.Y.Z.php` lancés par PrestaShop (gestionnaire
+  de modules ou `prestashop:module upgrade ucpbridge`), à partir de la 0.1.2. `upgrade-0.1.3.php` appelle
+  `Ucpbridge::upgradeInPlace()` : tables, colonnes (`Ucpbridge::ADDED_COLUMNS`), hooks et clés de configuration
+  manquants créés, lignes et valeurs existantes intactes (clé API, secret des liens signés, clients OAuth), règles
+  `.htaccess` réinsérées ; rejouable. Nouvelle classe `UcpBridgeSchema`. La configuration d'installation est décrite
+  une seule fois (`configDefaults()`), pour l'installation comme pour la mise à jour. Les corrections #1 à #4 ne
+  changent aucune table : elles n'ajoutent que des clés au JSON `payload` des sessions
+  (`charge_attempt`, `charge_unknown`), lues avec une valeur par défaut. Configuration : la clé unique
+  `UCPBRIDGE_API_KEY` (#5) est migrée vers la plateforme `default` de `UCPBRIDGE_API_KEYS` en tête de la mise à jour,
+  avant la création des clés manquantes (sinon une clé neuve aurait pris sa place). L'ancienne clé n'est supprimée
+  qu'après l'enregistrement réussi de la nouvelle liste (`UcpBridgeApiKeys::migrateLegacy()`) : si l'écriture échoue,
+  elle reste acceptée et la mise à jour échoue au lieu de couper la plateforme en place. Version du module : 0.1.3.
+- Désinstallation (#12) : le journal de preuve (`ps_ucpbridge_proof`), les demandes de rétractation
+  (`ps_ucpbridge_withdrawal`) et le journal des paiements (`ps_ucpbridge_payment`) sont conservés par défaut et
+  retrouvés à la réinstallation (colonnes complétées si les tables datent d'une version plus ancienne). Suppression
+  seulement sur choix explicite : case « Supprimer aussi... à la prochaine désinstallation » de la configuration
+  (`UCPBRIDGE_UNINSTALL_PURGE`, 0 par défaut, effacée avec la configuration). Export CSV des preuves et rétractations
+  depuis la configuration (`UcpBridgeExport`, jeton anti-CSRF du module) : UTF-8 avec BOM, séparateur `;`, une ligne
+  par commande, champs JSON tels qu'enregistrés, valeurs commençant par `=`, `+`, `-` ou `@` neutralisées.
+- RGPD (#13) : durées de conservation configurables par catégorie (`UCPBRIDGE_RETENTION_SESSIONS` 30 j,
+  `_GUESTS` 30 j, `_OAUTH` 30 j, `_PAYMENTS` 3650 j, `_PROOFS` 3650 j ; 0 = jamais) et purge (`UcpBridgePurge`) en
+  ligne de commande (`bin/purge.php`, `--dry-run`) et depuis la configuration (« Simuler la purge », « Purger
+  maintenant »), avec compte rendu par catégorie, aussi consigné au journal PrestaShop. Sessions et paniers terminés ou
+  expirés supprimés avec leur panier PrestaShop sans commande et leur adresse sans client ; sessions terminées par une
+  commande gardées sans les données personnelles de l'acheteur ; clients invités créés par le module et sans aucune
+  commande supprimés, ceux qui ont commandé jamais ; codes et jetons OAuth expirés ou révoqués ; journal des paiements,
+  preuves et rétractations après 10 ans ; clés d'idempotence de plus de 24 h. Aucune commande touchée. Une session en
+  échec (débit non remboursé ou incertain) et son acheteur invité suivent la durée du journal des paiements : jamais
+  supprimés avant. Durées du journal des paiements et des preuves jamais sous 3650 jours (0 = jamais reste permis) :
+  refus à l'enregistrement, et purge refusée sans rien supprimer si la configuration est en dessous. Compte rendu
+  exact (paniers et adresses supprimés avec un invité comptés, simulation identique à la purge) ; sessions lues par
+  lots, celles déjà minimisées écartées en SQL ; aucune commande vérifiée avant toute suppression. Nouvelle table
+  `ps_ucpbridge_customer` (invités créés par le module, renseignée à la création de l'invité, reprise depuis les
+  sessions à la mise à jour depuis la 0.1.2, conservée à la désinstallation avec les preuves).
+- Compatibilité PrestaShop 8.0 à 9.2 (#14) : `ps_versions_compliancy` minimum ramené de 9.1.0 à 8.0.0 ; suite
+  complète éprouvée sur les images officielles 8.0.5, 8.1.7 et 8.2.8 (PHP 8.1), 9.0.3, 9.1.5 et 9.2.0 (PHP de
+  l'image). Aucun changement du code fonctionnel n'a été nécessaire. PHP 8.1 minimum, vérifié à l'installation
+  (`Ucpbridge::PHP_MIN`) : sous PHP 7.2 à 8.0, que PrestaShop 8 accepte encore, l'installation est refusée avec un
+  message clair. Banc d'essai multiversion : variable `PS_IMAGE` du `docker-compose.yml` (9.1.5 par défaut) ; attente
+  de la boutique qui suit les redirections (PrestaShop 8 renvoie `/` vers `/fr/`) ; jeu de démo sans la colonne
+  `carrier.id_tax_rules_group`, absente en PrestaShop 8 ; `run-unit.sh` lance PHPUnit 12 avec le PHP de l'hôte
+  (`UNIT_PHP`) quand l'image est en PHP 8.1 ; tests d'intégration indépendants de la version (noyau Symfony
+  `AdminKernel` ou `AppKernel`, confirmation du lien d'administration sans jeton, lien des commandes à jeton
+  Symfony, 0.1.2 installée en abaissant son seul minimum pour éprouver la mise à jour sur PrestaShop 8, back-office
+  attendu au chargement et non plus au repos réseau, que le tableau de bord 9.2 n'atteint jamais) ; conteneur
+  PrestaShop relancé s'il s'arrête en erreur (l'image 9.2.0 échoue juste après une installation réussie). Intégration
+  continue : lint sous PHP 8.1 et matrice d'intégration d'une version par branche mineure.
+
 Corrections
 
 - API (#5) : une clé API par plateforme en mode invité (`UcpBridgeApiKeys`, configuration `UCPBRIDGE_API_KEYS`).

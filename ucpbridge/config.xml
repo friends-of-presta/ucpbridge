@@ -3,7 +3,7 @@
 <module>
     <name>ucpbridge</name>
     <displayName><![CDATA[UCP Bridge pour PrestaShop]]></displayName>
-    <version><![CDATA[0.1.2]]></version>
+    <version><![CDATA[0.1.3]]></version>
     <description><![CDATA[Universal Commerce Protocol : profil, panier transférable, caisse native, déclinaisons, CGV et preuve, MCP.]]></description>
     <author><![CDATA[Friends of Presta (Christophe Vidal)]]></author>
     <tab><![CDATA[payments_gateways]]></tab>

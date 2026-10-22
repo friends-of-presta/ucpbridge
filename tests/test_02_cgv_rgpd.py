@@ -11,7 +11,7 @@ import uuid
 
 import pytest
 
-from conftest import (BANC, BASE, BUYER, DEST_FR, M_BLANC, admin_dir, admin_login, appel, id_commande, attendre_mails, config, mail, php,
+from conftest import (BANC, BASE, BUYER, DEST_FR, MAILPIT, M_BLANC, admin_login, appel, id_commande, attendre_mails, config, mail, ouvrir_configuration, php,
                       set_config, sql, sql_val, total)
 
 TYPES = ["terms_of_service", "privacy_policy", "refund_policy", "shipping_policy"]
@@ -56,20 +56,18 @@ def test_configuration_back_office_avec_jeton_csrf(boutique):
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1280, "height": 1000})
         admin_login(page)
-        page.goto(f"{BASE}/{admin_dir()}/index.php?controller=AdminModules&configure=ucpbridge")
-        if "compromised" in page.url:  # lien sans jeton d'administration : PrestaShop demande confirmation
-            page.click("text=Oui, je comprends les risques")
+        ouvrir_configuration(page)
         page.wait_for_selector("select[name=UCPBRIDGE_CMS_SHIPPING]")
         page.select_option("select[name=UCPBRIDGE_CMS_SHIPPING]", "5")
-        page.click("button[name=submitUcpbridge]")
-        page.wait_for_load_state("networkidle")
+        with page.expect_navigation(wait_until="load"):  # back-office 9.2 jamais au repos : pas de « networkidle »
+            page.click("button[name=submitUcpbridge]")
         assert config("UCPBRIDGE_CMS_SHIPPING") == "5"
         page.screenshot(path=os.path.join(BANC, "capture-config-module.png"), full_page=True)
         # Même formulaire sans jeton CSRF du module : refusé, configuration inchangée.
         page.evaluate("document.querySelector('input[name=ucp_csrf]').value = 'faux'")
         page.select_option("select[name=UCPBRIDGE_CMS_SHIPPING]", "1")
-        page.click("button[name=submitUcpbridge]")
-        page.wait_for_load_state("networkidle")
+        with page.expect_navigation(wait_until="load"):  # back-office 9.2 jamais au repos : pas de « networkidle »
+            page.click("button[name=submitUcpbridge]")
         assert config("UCPBRIDGE_CMS_SHIPPING") == "5"
         nav.close()
     set_config("UCPBRIDGE_CMS_SHIPPING", 1)
@@ -161,7 +159,8 @@ def test_journal_visible_sur_la_fiche_commande(boutique):
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1400, "height": 1000})
         admin_login(page)
-        lien = page.locator("a[href*='sell/orders']").first.get_attribute("href")
+        # Lien du menu avec le jeton Symfony (_token) ; PrestaShop 8 y ajoute un lien à jeton historique (token).
+        lien = page.locator("a[href*='sell/orders'][href*='_token=']").first.get_attribute("href")
         jeton = urllib.parse.parse_qs(urllib.parse.urlparse(lien).query)["_token"][0]
         page.goto(f"{BASE}/{lien.split('/index.php')[0].strip('/').split('/')[-1]}/index.php/sell/orders/{oid}/view?_token={jeton}")
         bloc = page.locator("#ucpbridge-proof")
@@ -252,7 +251,7 @@ def test_email_de_confirmation_et_retractation(boutique):
     with sync_playwright() as pw:
         nav = pw.chromium.launch()
         page = nav.new_page(locale="fr-FR", viewport={"width": 1200, "height": 1000})
-        page.goto(f"http://localhost:8025/view/{conf[0]['ID']}.html")
+        page.goto(f"{MAILPIT}/view/{conf[0]['ID']}.html")
         page.wait_for_load_state("networkidle")
         page.screenshot(path=os.path.join(BANC, "capture-mail-confirmation.png"), full_page=True)
         page.get_by_text("Informations légales").scroll_into_view_if_needed()

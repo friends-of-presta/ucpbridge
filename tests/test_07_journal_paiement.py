@@ -11,7 +11,7 @@ import re
 import subprocess
 from contextlib import contextmanager
 
-from conftest import MYSQL, PS, sql, sql_val
+from conftest import MYSQL, NOYAU_PHP, PS, sql, sql_val
 from test_04_relecture import complete, id_cart
 from test_05_relecture2 import commandes, journal, statut
 
@@ -34,7 +34,7 @@ def journal_indisponible(sid):
 # Finalisation dans le conteneur, PrestaShop en mode debug (les erreurs SQL deviennent des exceptions).
 SONDE = r"""<?php define('_PS_MODE_DEV_', true); define('_PS_ADMIN_DIR_', '/var/www/html/admin');
 require '/var/www/html/config/config.inc.php';
-require_once '/var/www/html/app/AdminKernel.php'; global $kernel; $kernel = new AdminKernel('prod', false); $kernel->boot();
+NOYAU
 error_reporting(E_ERROR); ini_set('display_errors', 'off');
 $m = Module::getInstanceByName('ucpbridge');
 $ctx = Context::getContext();
@@ -53,7 +53,7 @@ try {
 
 
 def finaliser_en_debug(boutique, sid):
-    code = (SONDE.replace("SID", json.dumps(sid))
+    code = (SONDE.replace("NOYAU", NOYAU_PHP.strip()).replace("SID", json.dumps(sid))
             .replace("INSTR", "json_decode(" + json.dumps(json.dumps(boutique.instrument_mock())) + ", true)"))
     r = subprocess.run(["docker", "exec", "-i", "-u", "www-data", PS, "php"], input=code, capture_output=True, text=True)
     return r.stdout.strip()

@@ -10,15 +10,14 @@ import subprocess
 import threading
 import time
 
-from conftest import BASE, CLIENT_ID, M_BLANC, PS, appel, secret_client_test, sql, sql_val
+from conftest import BASE, CLIENT_ID, M_BLANC, NOYAU_PHP, PS, appel, secret_client_test, sql, sql_val
 from test_04_relecture import complete, id_cart, id_client_demo, ouvrir_lien
 
 
 def php_noyau(code):
     """PHP dans le conteneur, PrestaShop et son noyau Symfony chargés (validateOrder en a besoin)."""
     script = ("<?php define('_PS_ADMIN_DIR_', '/var/www/html/admin'); require '/var/www/html/config/config.inc.php';\n"
-              "require_once '/var/www/html/app/AdminKernel.php'; global $kernel; $kernel = new AdminKernel('prod', false); $kernel->boot();\n"
-              + code)
+              + NOYAU_PHP + code)
     r = subprocess.run(["docker", "exec", "-i", "-u", "www-data", PS, "php"], input=script, capture_output=True, text=True)
     return r.stdout.strip(), r.returncode
 

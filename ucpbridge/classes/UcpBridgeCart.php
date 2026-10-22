@@ -747,6 +747,8 @@ class UcpBridgeCart
             $c->add();
             $c->updateGroup([(int) Configuration::get('PS_GUEST_GROUP')]);
             $s['payload']['id_customer'] = (int) $c->id;
+            // Invité créé par le module : purgé s'il ne commande pas (durée de conservation, UcpBridgePurge).
+            UcpBridgePurge::recordGuest((int) $c->id);
         } else {
             $c->update();
         }
