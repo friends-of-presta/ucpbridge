@@ -22,6 +22,7 @@ require_once __DIR__ . '/classes/UcpBridgeCatalog.php';
 require_once __DIR__ . '/classes/UcpBridgeCart.php';
 require_once __DIR__ . '/classes/UcpBridgeIdempotency.php';
 require_once __DIR__ . '/classes/UcpBridgeApiKeys.php';
+require_once __DIR__ . '/classes/UcpBridgeSchema.php';
 require_once __DIR__ . '/classes/UcpBridgeDiscount.php';
 require_once __DIR__ . '/classes/UcpBridgeOAuth.php';
 require_once __DIR__ . '/classes/UcpBridgeProof.php';
@@ -61,7 +62,7 @@ class Ucpbridge extends PaymentModule
     {
         $this->name = 'ucpbridge';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.2';
+        $this->version = '0.1.3';
         $this->author = 'Friends of Presta (Christophe Vidal)';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -81,6 +82,40 @@ class Ucpbridge extends PaymentModule
             && UcpBridgeOAuth::installDb()
             && UcpBridgeProof::installDb()
             && $this->installConfig()
+            && $this->installHtaccess();
+    }
+
+    /**
+     * Colonnes ajoutées aux tables après la première publication (0.1.2) : [table sans préfixe => [colonne => définition]].
+     * Toute colonne ajoutée à un CREATE TABLE doit aussi figurer ici, sinon une boutique mise à jour ne l'aura pas
+     * (test d'intégration tests/test_11_mise_a_jour.py : schéma mis à jour comparé à celui d'une installation fraîche).
+     * Aucune pour la 0.1.3 : les corrections #1 à #4 n'ajoutent que des clés dans le JSON `payload` des sessions
+     * (charge_attempt, charge_unknown), lues avec une valeur par défaut.
+     */
+    const ADDED_COLUMNS = [];
+
+    /**
+     * Mise à jour en place, sans perte (appelée par chaque script upgrade/upgrade-X.Y.Z.php) : tables manquantes
+     * créées, colonnes ajoutées, hooks enregistrés, clés de configuration manquantes créées avec leur valeur par
+     * défaut, règles de réécriture réinsérées. Les lignes et les valeurs déjà configurées ne sont jamais modifiées.
+     * Rejouable : un second passage ne change rien.
+     */
+    public function upgradeInPlace()
+    {
+        // Clé unique de la 0.1.2 (UCPBRIDGE_API_KEY) migrée vers la plateforme « default » AVANT de créer les clés
+        // manquantes : sinon UCPBRIDGE_API_KEYS naîtrait avec une clé neuve et la plateforme en place perdrait l'accès.
+        // L'ancienne clé n'est supprimée qu'une fois la nouvelle enregistrée ; sinon la mise à jour échoue.
+        if (!UcpBridgeApiKeys::migrateLegacy()) {
+            return false;
+        }
+
+        return $this->installProviderHook()
+            && $this->registerHook(self::HOOKS)
+            && $this->installDb()
+            && UcpBridgeOAuth::installDb()
+            && UcpBridgeProof::installDb()
+            && UcpBridgeSchema::addMissingColumns(self::ADDED_COLUMNS)
+            && UcpBridgeSchema::addMissingConfig($this->configDefaults())
             && $this->installHtaccess();
     }
 
@@ -137,26 +172,49 @@ class Ucpbridge extends PaymentModule
         ) ENGINE={$e} DEFAULT CHARSET=utf8mb4");
     }
 
-    private function installConfig()
+    /**
+     * Configuration d'une installation : valeur de chaque clé, ou fonction anonyme qui la calcule (secrets aléatoires,
+     * pages légales devinées). L'installation écrit tout ; la mise à jour ne crée que les clés absentes.
+     */
+    private function configDefaults()
     {
         // Clé API de la plateforme par défaut (Bearer) et secret HMAC des liens signés : générés à l'installation.
         // Chaque plateforme supplémentaire reçoit sa propre clé (configuration du module).
         // Le paiement de test reste désactivé tant que UCPBRIDGE_MOCK_SECRET est vide.
-        Configuration::deleteByName(UcpBridgeApiKeys::LEGACY);
-        $ok = Configuration::updateValue(UcpBridgeApiKeys::CONFIG, '{}')
-            && null !== UcpBridgeApiKeys::add(UcpBridgeApiKeys::DEFAULT_ID, UcpBridgeApiKeys::DEFAULT_LABEL)
-            && Configuration::updateValue('UCPBRIDGE_LINK_SECRET', bin2hex(random_bytes(32)))
-            && Configuration::updateValue('UCPBRIDGE_MOCK_SECRET', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_KEY', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_PK', '')
-            && Configuration::updateValue('UCPBRIDGE_STRIPE_API_BASE', UcpBridgeStripeProvider::DEFAULT_BASE)
-            && Configuration::updateValue('UCPBRIDGE_GPAY_MERCHANT_ID', '')
-            && Configuration::updateValue('UCPBRIDGE_OAUTH_CLIENTS', '{}')
-            && Configuration::updateValue('UCPBRIDGE_TERMS_REVIEW', 0);
+        $defaults = [
+            UcpBridgeApiKeys::CONFIG => function () {
+                return UcpBridgeApiKeys::encode(UcpBridgeApiKeys::initial(date('Y-m-d H:i:s')));
+            },
+            'UCPBRIDGE_LINK_SECRET' => function () {
+                return bin2hex(random_bytes(32));
+            },
+            'UCPBRIDGE_MOCK_SECRET' => '',
+            'UCPBRIDGE_STRIPE_KEY' => '',
+            'UCPBRIDGE_STRIPE_PK' => '',
+            'UCPBRIDGE_STRIPE_API_BASE' => UcpBridgeStripeProvider::DEFAULT_BASE,
+            'UCPBRIDGE_GPAY_MERCHANT_ID' => '',
+            'UCPBRIDGE_OAUTH_CLIENTS' => '{}',
+            'UCPBRIDGE_TERMS_REVIEW' => 0,
+        ];
         // Pages légales devinées depuis la boutique (CGV : la page des conditions du tunnel de commande).
-        $map = UcpBridgeLegal::defaultMapping($this->legalPages(), (int) Configuration::get('PS_CONDITIONS_CMS_ID'));
         foreach (self::CMS_KEYS as $type => $key) {
-            $ok = $ok && Configuration::updateValue($key, (int) $map[$type]);
+            $defaults[$key] = function () use ($type) {
+                $map = UcpBridgeLegal::defaultMapping($this->legalPages(), (int) Configuration::get('PS_CONDITIONS_CMS_ID'));
+
+                return (int) $map[$type];
+            };
+        }
+
+        return $defaults;
+    }
+
+    private function installConfig()
+    {
+        // Clé unique des versions précédentes : remplacée par la plateforme par défaut de UCPBRIDGE_API_KEYS.
+        Configuration::deleteByName(UcpBridgeApiKeys::LEGACY);
+        $ok = true;
+        foreach ($this->configDefaults() as $key => $v) {
+            $ok = $ok && Configuration::updateValue($key, $v instanceof Closure ? $v() : $v);
         }
 
         return $ok;

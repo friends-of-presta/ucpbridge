@@ -323,9 +323,8 @@ Preuve, données personnelles, conformité
 Compatibilité et code
 - Éprouvé uniquement sur PrestaShop **9.1.5** (image Docker officielle, PHP 8.5). Minimum déclaré 9.1.0. PrestaShop 8
   n'est pas testé. PHP minimum : celui de PrestaShop 9.1 (8.1) ; les tests unitaires exigent PHPUnit 12, donc PHP 8.3.
-- Script `upgrade/` absent : la 0.1.2 ajoute des colonnes (`issued_us`) et une table
-  (`ps_ucpbridge_oauth_revocation`), il faut désinstaller la version précédente puis installer la 0.1.2 (ce qui efface
-  les preuves, voir ci-dessus).
+- Mise à jour en place éprouvée à partir de la 0.1.2 seulement (première version publiée) : une version de test
+  antérieure se désinstalle puis s'installe.
 - Concurrence entre le lien de reprise et une mise à jour : si l'acheteur ouvre le lien pendant qu'une mise à jour de
   l'agent est en cours (fraction de seconde), le lien est refusé avec « réessayez dans quelques secondes ».
 - Back-office et fiche commande en HTML construit à la main (pas de `HelperForm` ni de gabarits Smarty) ;
@@ -347,6 +346,16 @@ mot de passe ni clé n'est livré dans le code. Il crée ses tables (`ps_ucpbrid
 `actionUcpBridgeRegisterPaymentProviders`. La désinstallation supprime tables (**y compris le journal de preuve et les
 rétractations**), configuration (`UCPBRIDGE_*`), inscriptions aux hooks, hook d'extension (s'il ne sert à aucun autre
 module) et bloc `.htaccess`.
+
+**Mise à jour** (à partir de la 0.1.2) : téléverser la nouvelle archive par le gestionnaire de modules, ou remplacer
+les fichiers puis lancer `php bin/console prestashop:module upgrade ucpbridge`, sans désinstaller. PrestaShop exécute
+alors les scripts `upgrade/upgrade-X.Y.Z.php` des versions intermédiaires. Chacun appelle `Ucpbridge::upgradeInPlace()`,
+qui crée les tables, colonnes (`Ucpbridge::ADDED_COLUMNS`), hooks et clés de configuration manquants, sans modifier
+aucune ligne ni aucune valeur déjà configurée (clé API, secret des liens signés, clients OAuth, pages légales). Le
+script est rejouable. S'il échoue, PrestaShop désactive le module et garde l'ancienne version en base, sans perte.
+Une nouvelle colonne s'ajoute à la fois dans son `CREATE TABLE` et dans `Ucpbridge::ADDED_COLUMNS` : le test
+`tests/test_11_mise_a_jour.py` compare le schéma d'une boutique mise à jour depuis la 0.1.2 à celui d'une
+installation fraîche.
 
 Le module ajoute en tête du `.htaccess` (et y revient à chaque régénération) les règles `/.well-known/ucp`,
 `/ucp/v1/*` (dont `/ucp/v1/mcp`), `/.well-known/oauth-authorization-server` et `/ucp/oauth/*`, car le routeur
@@ -415,7 +424,9 @@ python3 mcp_client.py   # client MCP minimal : « t-shirt colibri taille M » ju
   d'un hook après création de la commande (pas de remboursement), 10 tours `PUT` et `complete` simultanés, débit
   refusé sur panier vide, 5 rafraîchissements simultanés (une seule paire), 40 tours révocation et rafraîchissement
   simultanés (aucun jeton survivant), processus arrêté après le débit ou après la commande puis rapprochement en ligne
-  de commande, bouton de rapprochement, panier UCP figé après ouverture de son lien.
+  de commande, bouton de rapprochement, panier UCP figé après ouverture de son lien ; mise à jour depuis la 0.1.2
+  publiée (`tests/test_11_mise_a_jour.py`) : données, configuration et jetons conservés, schéma identique à une
+  installation fraîche, script rejouable.
 
 ## Architecture
 
@@ -435,6 +446,8 @@ classes/UcpBridgeLegal.php, UcpBridgeConsent.php, UcpBridgeTotals.php, UcpBridge
 UcpBridgePkce.php             logique pure, couverte par les tests unitaires
 classes/UcpBridgeProof.php    tables du journal de preuve, des rétractations et des paiements (débits, remboursements)
 classes/payment/              adaptateurs de paiement (interface, registre, mock, Stripe pour Google Pay)
+classes/UcpBridgeSchema.php   évolution du schéma en place (colonnes et configuration manquantes), mise à jour
+upgrade/upgrade-X.Y.Z.php     scripts de mise à jour lancés par PrestaShop (appellent Ucpbridge::upgradeInPlace)
 bin/reconcile.php             rapprochement des sessions bloquées (ligne de commande uniquement)
 mails/{fr,en}/                modèle de l'accusé de réception de rétractation
 ```
